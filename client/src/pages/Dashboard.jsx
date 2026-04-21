@@ -1,0 +1,177 @@
+import React, { useCallback, useEffect, useState } from "react";
+import Navbar from "../components/dashboard/Navbar";
+import SummaryPanel from "../components/dashboard/SummaryPanel";
+import DetailedSummary from "../components/dashboard/DetailedSummary";
+import DataInput from "../components/dashboard/DataInput";
+import DataGrid from "../components/dashboard/DataGrid";
+import ChartsPanel from "../components/dashboard/ChartsPanel";
+import EditTransactionModal from "../components/dashboard/EditTransactionModal";
+import { useAuth } from "../context/AuthContext";
+import { useToast } from "../hooks/useToast";
+import { errorMessage } from "../services/api";
+import {
+  deleteTransaction,
+  getSummary,
+  listAllTransactions,
+  updateTransaction,
+} from "../services/transactions";
+
+const initialStats = {
+  totalEntries: 0,
+  totalAmount: 0,
+  averageAmount: 0,
+  highestAmount: 0,
+  lowestAmount: 0,
+  deletedCount: 0,
+  uniqueCards: 0,
+  topBrand: "—",
+  todayCount: 0,
+};
+
+export function deriveEntryStats(items) {
+  const cardSet = new Set();
+  const byBrand = {};
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const todayMs = startOfToday.getTime();
+  let todayCount = 0;
+
+  for (const e of items) {
+    if (e.cardNumber) cardSet.add(e.cardNumber);
+    if (e.cardType) byBrand[e.cardType] = (byBrand[e.cardType] ?? 0) + 1;
+    if (typeof e.timestamp === "number" && e.timestamp >= todayMs) todayCount += 1;
+  }
+
+  const topBrand =
+    Object.entries(byBrand).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+
+  return { uniqueCards: cardSet.size, topBrand, todayCount };
+}
+
+export default function Dashboard() {
+  const { user } = useAuth();
+  const toast = useToast();
+  const [entries, setEntries] = useState([]);
+  const [stats, setStats] = useState(initialStats);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [{ items }, s] = await Promise.all([listAllTransactions(), getSummary()]);
+      setEntries(items);
+      const derived = deriveEntryStats(items);
+      setStats({
+        totalEntries: s.total_entries,
+        totalAmount: Number(s.total_amount),
+        averageAmount: Number(s.average_amount),
+        highestAmount: Number(s.highest_amount),
+        lowestAmount: Number(s.lowest_amount),
+        deletedCount: s.deleted_count ?? 0,
+        ...derived,
+      });
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  // Refresh everything (summary, charts, data grid).
+  const refreshAll = useCallback(() => {
+    loadData();
+    setRefreshKey((k) => k + 1);
+  }, [loadData]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteTransaction(id);
+      toast.success("Transaction deleted");
+      refreshAll();
+    } catch (err) {
+      toast.error(errorMessage(err));
+    }
+  };
+
+  const handleEdit = (entry) => setEditing(entry);
+
+  const handleEditSubmit = async (patch) => {
+    if (!editing) return;
+    await updateTransaction(editing.id, patch);
+    toast.success("Transaction updated");
+    refreshAll();
+  };
+
+  if (loading && entries.length === 0) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
+          <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">
+            Loading data
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F9FAFB]">
+      <Navbar username={user?.username ?? "admin"} />
+
+      <main className="p-8 max-w-[1600px] mx-auto">
+        <header className="mb-10">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+            Dashboard overview
+          </h1>
+          <p className="text-gray-500 font-normal mt-1.5 text-sm">
+            Manage financial interactions and growth metrics
+          </p>
+        </header>
+
+        <SummaryPanel stats={stats} />
+
+        <div className="mt-10">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-base font-semibold tracking-tight text-gray-900">
+              Data injection
+            </h3>
+            <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">
+              Control panel
+            </span>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <DataInput onDataChanged={refreshAll} />
+            </div>
+            <div className="lg:col-span-1">
+              <DetailedSummary stats={stats} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-10 space-y-8">
+          <ChartsPanel entries={entries} />
+          <DataGrid
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            refreshKey={refreshKey}
+          />
+        </div>
+      </main>
+
+      <EditTransactionModal
+        open={!!editing}
+        entry={editing}
+        onClose={() => setEditing(null)}
+        onSubmit={handleEditSubmit}
+      />
+    </div>
+  );
+}

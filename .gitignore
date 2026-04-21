@@ -1,0 +1,26 @@
+# Node / frontend
+client/node_modules
+client/dist
+client/.env
+client/html/
+client/coverage/
+
+# Python / backend
+server/__pycache__/
+server/**/__pycache__/
+server/.venv/
+server/venv/
+server/.env
+server/*.db
+server/*.sqlite*
+server/reports/
+server/.coverage
+server/.pytest_cache/
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

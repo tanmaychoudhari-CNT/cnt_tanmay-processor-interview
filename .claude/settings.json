@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/hp/.claude/projects/c--Users-hp-Git-cnt-tanmay-processor-interview/memory/**)",
+      "Bash(python -c \"import compileall, sys; sys.exit\\(0 if compileall.compile_dir\\('.', quiet=1, force=True\\) else 1\\)\")",
+      "Bash(python -c \"import compileall; ok = compileall.compile_dir\\('.', quiet=1, force=True\\); print\\('OK' if ok else 'FAIL'\\)\")",
+      "Bash(python -c \"import compileall; print\\('OK' if compileall.compile_dir\\('.', quiet=1, force=True\\) else 'FAIL'\\)\")",
+      "Bash(npm --version)",
+      "Bash(python -m venv .venv)",
+      "Bash(.venv/Scripts/python.exe -m pip install --upgrade pip)",
+      "Bash(.venv/Scripts/python.exe -m pip install -r requirements.txt)",
+      "Bash(.venv/Scripts/python.exe -m alembic upgrade head)",
+      "Bash(.venv/Scripts/python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000)",
+      "Bash(curl -sS http://127.0.0.1:8000/api/health)",
+      "Bash(.venv/Scripts/python.exe -m pip uninstall -y passlib)",
+      "Bash(.venv/Scripts/python.exe -c \"import bcrypt; print\\(bcrypt.__version__\\); print\\(bcrypt.hashpw\\(b'test', bcrypt.gensalt\\(\\)\\)[:10]\\)\")",
+      "Bash(curl -sS -X POST http://127.0.0.1:8000/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"admin123\"}')",
+      "Bash(npm run *)",
+      "Bash(curl -sS -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://127.0.0.1:5173/)",
+      "Bash(curl -sS -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(curl -sS http://localhost:5173/)",
+      "Bash(curl -sS -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:5173/src/main.jsx)",
+      "Bash(curl -sS -o /dev/null -w \"/api health via proxy = HTTP %{http_code}\\\\n\" http://localhost:5173/api/health)",
+      "Bash(curl -sS -X POST http://localhost:5173/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"admin123\"}')",
+      "Bash(python -m json.tool)",
+      "Bash(python -c \"print\\(open\\(r'c:/Users/hp/Git/cnt_tanmay-processor-interview/signapay-dashboard/src/App.tsx','r',encoding='utf-8'\\).read\\(\\)\\)\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\hp\\Git\\cnt_tanmay-processor-interview\\server"
+    ]
+  }
+}
