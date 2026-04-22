@@ -122,7 +122,6 @@ All defined in [`app/config/settings.py`](app/config/settings.py). Mirror into
 | `SEED_ADMIN_PASSWORD` | `admin123` | Rejected as prod default |
 | `PASSWORD_MIN_LENGTH` | `8` | |
 | `MAX_UPLOAD_BYTES` | `10_000_000` | Hard cap on multipart body size |
-| `MAX_UPLOAD_ROWS` | `10_000` | Per-file row cap enforced by the parser |
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated allow-list |
 
 When `ENVIRONMENT=production`, the app refuses to boot if `JWT_SECRET` /
@@ -230,5 +229,5 @@ Shared slowapi instance in `api/_deps.py` — per-IP caps:
   Set real values in `.env`.
 - **`401 invalid or expired token` right after login** — check that the
   clock on your machine is correct; JWT `exp` is compared against UTC.
-- **Uploads stuck at 413** — raise `MAX_UPLOAD_BYTES` (multipart size)
-  or `MAX_UPLOAD_ROWS` (per-file cap) in `.env`.
+- **Uploads stuck at 413** — raise `MAX_UPLOAD_BYTES` (multipart body
+  size) in `.env`.

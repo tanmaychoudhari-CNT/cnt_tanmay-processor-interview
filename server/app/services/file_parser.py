@@ -145,14 +145,8 @@ def parse_upload(
     content: bytes,
     *,
     user_id: UUID,
-    max_rows: int | None = None,
 ) -> dict:
-    """Parse a batch upload.
-
-    max_rows: hard cap on rows consumed from the file. If the file contains
-    more rows than this, we raise a ValueError so the API can return 413.
-    This prevents a crafted 10M-row CSV from ballooning the database.
-    """
+    """Parse a batch upload."""
     lower = filename.lower()
     if lower.endswith(".csv"):
         fmt, rows = "csv", _iter_csv(content)
@@ -167,18 +161,8 @@ def parse_upload(
     rejected = 0
     samples: list[str] = []
     batch: list[Transaction] = []
-    seen = 0
 
     for raw in rows:
-        seen += 1
-        if max_rows is not None and seen > max_rows:
-            # Abort — the caller asked for a cap. Roll back anything we
-            # already flushed into the session so we don't half-commit.
-            transaction_db.rollback(db)
-            raise FileParseError(
-                f"file exceeds the {max_rows}-row limit (aborted at row {seen})"
-            )
-
         norm = _normalize_keys(raw)
         card = norm.get("card_number")
         amount_raw = norm.get("amount")

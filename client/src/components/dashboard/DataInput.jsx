@@ -375,7 +375,7 @@ function UploadPanel({
           </div>
 
           <p className="mt-4 text-[10px] font-medium uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
-            Max 10 MB · Up to 10,000 rows per file
+            Max 10 MB per file
           </p>
         </>
       ) : (

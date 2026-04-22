@@ -66,6 +66,5 @@ async def upload(
         file.filename or "upload",
         content,
         user_id=user.id,
-        max_rows=settings.max_upload_rows,
     )
     return StandardResponse(data=UploadResult(**result))

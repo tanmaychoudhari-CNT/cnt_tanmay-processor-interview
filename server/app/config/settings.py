@@ -46,7 +46,6 @@ class Settings(BaseSettings):
 
     # Upload hardening.
     max_upload_bytes: int = Field(default=10_000_000)      # 10 MB
-    max_upload_rows: int = Field(default=10_000)
 
     # Comma-separated string so pydantic-settings doesn't try to JSON-decode it.
     # Expose the parsed list via `cors_origins_list`.
