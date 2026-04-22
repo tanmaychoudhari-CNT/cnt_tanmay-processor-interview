@@ -5,6 +5,7 @@ import DetailedSummary from "../components/dashboard/DetailedSummary";
 import DataInput from "../components/dashboard/DataInput";
 import DataGrid from "../components/dashboard/DataGrid";
 import ChartsPanel from "../components/dashboard/ChartsPanel";
+import InsightsPanel from "../components/dashboard/InsightsPanel";
 import EditTransactionModal from "../components/dashboard/EditTransactionModal";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../hooks/useToast";
@@ -158,6 +159,7 @@ export default function Dashboard() {
 
         <div className="mt-10 space-y-8">
           <ChartsPanel entries={entries} />
+          <InsightsPanel entries={entries} />
           <DataGrid
             onDelete={handleDelete}
             onEdit={handleEdit}
