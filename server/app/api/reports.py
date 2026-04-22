@@ -16,10 +16,11 @@ from app.schemas import (
     ByCardItem,
     ByCardTypeItem,
     ByDayItem,
+    BySourceResponse,
     StandardResponse,
     SummaryResponse,
 )
-from app.services import by_card, by_card_type, by_day, summary
+from app.services import by_card, by_card_type, by_day, by_source, summary
 
 from ._deps import current_user
 
@@ -51,6 +52,16 @@ def get_by_card_type(db: Session = Depends(get_db), user: User = Depends(current
     return StandardResponse(
         data=[ByCardTypeItem(**row) for row in by_card_type(db, user_id=user.id)]
     )
+
+
+@router.get("/by-source", response_model=StandardResponse[BySourceResponse])
+def get_by_source(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    # Real-time count of Batch vs manual_entry rows. Powers the
+    # "Processing source" insight card so the split reflects every row in
+    # the DB rather than the 10k window the grid uses.
+    counts = by_source(db, user_id=user.id)
+    total = counts["upload"] + counts["manual"] + counts["unknown"]
+    return StandardResponse(data=BySourceResponse(**counts, total=total))
 
 
 @router.get("/by-day", response_model=StandardResponse[List[ByDayItem]])

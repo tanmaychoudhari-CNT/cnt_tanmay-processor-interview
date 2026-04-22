@@ -14,6 +14,7 @@ from .reports import (
     ByCardItem,
     ByCardTypeItem,
     ByDayItem,
+    BySourceResponse,
     SummaryResponse,
 )
 from .uploads import UploadResult
@@ -35,5 +36,6 @@ __all__ = [
     "ByCardItem",
     "ByCardTypeItem",
     "ByDayItem",
+    "BySourceResponse",
     "UploadResult",
 ]

@@ -27,6 +27,7 @@ import {
   getByCard,
   getByCardType,
   getByDay,
+  getBySource,
   getSummary,
   listAllTransactions,
   updateTransaction,
@@ -80,6 +81,7 @@ export default function Dashboard() {
     byCardType: [],
     byDay: [],
     byCard: [],
+    bySource: { upload: 0, manual: 0, unknown: 0, total: 0 },
   });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
@@ -88,13 +90,15 @@ export default function Dashboard() {
   // Full reload — entries + summary + aggregated reports.
   const loadData = useCallback(async () => {
     try {
-      const [{ items }, s, byCardType, byDay, byCard] = await Promise.all([
-        listAllTransactions(),
-        getSummary(),
-        getByCardType(),
-        getByDay(90),
-        getByCard(10),
-      ]);
+      const [{ items }, s, byCardType, byDay, byCard, bySource] =
+        await Promise.all([
+          listAllTransactions(),
+          getSummary(),
+          getByCardType(),
+          getByDay(90),
+          getByCard(10),
+          getBySource(),
+        ]);
       setEntries(items);
       const derived = deriveEntryStats(items);
       setStats({
@@ -106,7 +110,7 @@ export default function Dashboard() {
         deletedCount: s.deleted_count ?? 0,
         ...derived,
       });
-      setReports({ byCardType, byDay, byCard });
+      setReports({ byCardType, byDay, byCard, bySource });
     } catch (err) {
       toast.error(errorMessage(err));
     } finally {
@@ -119,11 +123,12 @@ export default function Dashboard() {
   // pay for the full entries download on every tick.
   const refreshReports = useCallback(async () => {
     try {
-      const [s, byCardType, byDay, byCard] = await Promise.all([
+      const [s, byCardType, byDay, byCard, bySource] = await Promise.all([
         getSummary(),
         getByCardType(),
         getByDay(90),
         getByCard(10),
+        getBySource(),
       ]);
       setStats((prev) => ({
         ...prev,
@@ -134,7 +139,7 @@ export default function Dashboard() {
         lowestAmount: Number(s.lowest_amount),
         deletedCount: s.deleted_count ?? 0,
       }));
-      setReports({ byCardType, byDay, byCard });
+      setReports({ byCardType, byDay, byCard, bySource });
     } catch {
       /* silent — background tick; a failure toast would be noisy */
     }
@@ -232,6 +237,7 @@ export default function Dashboard() {
           <InsightsPanel
             entries={entries}
             byCard={reports.byCard}
+            bySource={reports.bySource}
             stats={stats}
           />
           <DataGrid

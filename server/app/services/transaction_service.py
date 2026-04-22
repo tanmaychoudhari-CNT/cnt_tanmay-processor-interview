@@ -294,3 +294,7 @@ def by_day(
     db: Session, limit: int = 365, *, user_id: Optional[UUID] = None
 ) -> List[dict]:
     return transaction_db.aggregate_by_day(db, limit=limit, user_id=user_id)
+
+
+def by_source(db: Session, *, user_id: Optional[UUID] = None) -> dict:
+    return transaction_db.aggregate_by_source(db, user_id=user_id)

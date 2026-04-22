@@ -90,9 +90,11 @@ describe("InsightsPanel", () => {
     render(
       <InsightsPanel
         entries={[
+          entry({ source: "Batch" }),
+          // Mix in one legacy "file_upload" row to confirm the back-compat
+          // bucket — both should count toward Batch.
           entry({ source: "file_upload" }),
-          entry({ source: "file_upload" }),
-          entry({ source: "file_upload" }),
+          entry({ source: "Batch" }),
           entry({ source: "manual_entry" }),
         ]}
       />
@@ -102,5 +104,22 @@ describe("InsightsPanel", () => {
     // 3 uploads, 1 manual → 75% / 25%.
     expect(screen.getByText(/75%/)).toBeInTheDocument();
     expect(screen.getByText(/25%/)).toBeInTheDocument();
+  });
+
+  it("prefers the server-side bySource aggregate over in-memory entries", () => {
+    render(
+      <InsightsPanel
+        // The in-memory window only sees one row, but the DB-wide aggregate
+        // says 9,999 batch + 1 manual — the panel must reflect the aggregate.
+        entries={[entry({ source: "manual_entry" })]}
+        bySource={{ upload: 9999, manual: 1, unknown: 0, total: 10000 }}
+      />
+    );
+    expect(screen.getByText(/10,000 total/)).toBeInTheDocument();
+    expect(screen.getByText(/9,999/)).toBeInTheDocument();
+    // 9999/10000 → 100% (rounded), 1/10000 → 0% (rounded). Anchor the regex
+    // so /0%/ doesn't also match the trailing "0%" inside "100%".
+    expect(screen.getByText(/^·\s*100%$/)).toBeInTheDocument();
+    expect(screen.getByText(/^·\s*0%$/)).toBeInTheDocument();
   });
 });

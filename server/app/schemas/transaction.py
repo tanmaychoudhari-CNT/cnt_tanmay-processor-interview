@@ -16,7 +16,9 @@ from app.models.transaction import derive_card_type
 
 
 TxStatus = Literal["success", "failed", "pending"]
-TxSource = Literal["file_upload", "manual_entry"]
+# "Batch" is the canonical upload source; "file_upload" remains accepted so
+# the API can still ingest / filter legacy rows from before the rename.
+TxSource = Literal["Batch", "manual_entry", "file_upload"]
 
 
 def _normalize_card(v: str) -> str:
@@ -136,7 +138,7 @@ class TransactionFilters(BaseModel):
     sort_by: str = Field("transaction_date", max_length=32)
     sort_dir: str = Field("desc", pattern="^(asc|desc)$")
     card_type: Optional[str] = Field(None, max_length=32)
-    source: Optional[str] = Field(None, pattern="^(file_upload|manual_entry)$")
+    source: Optional[str] = Field(None, pattern="^(Batch|manual_entry|file_upload)$")
     # Aliased to `status` in the query string — `status` is a Python
     # builtin so the attribute name uses a trailing underscore.
     status_: Optional[str] = Field(

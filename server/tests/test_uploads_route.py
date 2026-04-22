@@ -39,7 +39,7 @@ def test_upload_csv(client, auth_headers):
     # Rows are stamped with source + file_name.
     r = client.get("/api/transactions", headers=auth_headers)
     items = r.json()["data"]["items"]
-    assert all(i["source"] == "file_upload" for i in items)
+    assert all(i["source"] == "Batch" for i in items)
     assert all(i["file_name"] == "test.csv" for i in items)
 
 

@@ -320,6 +320,39 @@ def aggregate_by_card_type(
     ]
 
 
+def aggregate_by_source(db: Session, *, user_id: Optional[UUID] = None) -> dict:
+    """Count active rows grouped by `source` (Batch vs manual_entry).
+
+    Returns a flat dict so the API can serialize it without a list of two
+    items — the UI only ever cares about these two buckets. Rows with a
+    NULL source (legacy / pre-source data) are bucketed as "unknown".
+
+    "Batch" is the canonical upload source; the legacy "file_upload" value
+    is also counted as upload so rows inserted before the rename still
+    appear in the Batch totals without requiring a data migration.
+    """
+    stmt = select(
+        Transaction.source,
+        func.count(Transaction.id).label("count"),
+    )
+    f = _scope_filter(user_id)
+    if f is not None:
+        stmt = stmt.where(f)
+    stmt = stmt.group_by(Transaction.source)
+
+    upload = 0
+    manual = 0
+    unknown = 0
+    for row in db.execute(stmt).all():
+        if row.source in ("Batch", "file_upload"):
+            upload += row.count
+        elif row.source == "manual_entry":
+            manual += row.count
+        else:
+            unknown += row.count
+    return {"upload": upload, "manual": manual, "unknown": unknown}
+
+
 def aggregate_by_day(
     db: Session, *, limit: int = 365, user_id: Optional[UUID] = None
 ) -> List[dict]:

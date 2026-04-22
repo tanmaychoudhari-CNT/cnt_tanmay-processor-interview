@@ -40,3 +40,13 @@ class ByDayItem(BaseModel):
     day: date
     total_amount: Decimal
     count: int
+
+
+class BySourceResponse(BaseModel):
+    # Real-time source split — counts of active rows whose `source` is
+    # Batch vs manual_entry. `unknown` covers legacy rows where the
+    # column is NULL so the totals always reconcile with summary.total_entries.
+    upload: int
+    manual: int
+    unknown: int
+    total: int

@@ -71,12 +71,59 @@ def test_by_day(client, auth_headers):
     assert days == ["2024-06-01", "2024-12-25"]
 
 
+def test_by_source_empty(client, auth_headers):
+    r = client.get("/api/reports/by-source", headers=auth_headers)
+    assert r.status_code == 200
+    assert r.json()["data"] == {"upload": 0, "manual": 0, "unknown": 0, "total": 0}
+
+
+def test_by_source_counts_manual_and_upload(client, auth_headers):
+    # Manual entries — every POST /api/transactions stamps source=manual_entry.
+    _seed(client, auth_headers)
+
+    # Upload a file → bulk-inserts two rows with source=Batch.
+    csv = (
+        b"card_number,amount,timestamp\n"
+        b"4111111111111111,10,2024-06-01T00:00:00\n"
+        b"5555555555554444,20,2024-06-01T00:00:00\n"
+    )
+    r = client.post(
+        "/api/uploads",
+        headers=auth_headers,
+        files={"file": ("tx.csv", csv, "text/csv")},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["data"]["accepted"] == 2
+
+    r = client.get("/api/reports/by-source", headers=auth_headers)
+    assert r.status_code == 200
+    d = r.json()["data"]
+    assert d["manual"] == 4
+    assert d["upload"] == 2
+    assert d["total"] == 6
+
+
+def test_by_source_excludes_soft_deleted(client, auth_headers):
+    _seed(client, auth_headers)
+
+    # Soft-delete one row → it should drop out of the source counts.
+    r = client.get("/api/transactions?page_size=1", headers=auth_headers)
+    tx_id = r.json()["data"]["items"][0]["id"]
+    client.delete(f"/api/transactions/{tx_id}", headers=auth_headers)
+
+    r = client.get("/api/reports/by-source", headers=auth_headers)
+    d = r.json()["data"]
+    assert d["manual"] == 3
+    assert d["total"] == 3
+
+
 def test_reports_require_auth(client):
     for path in (
         "/api/reports/summary",
         "/api/reports/by-card",
         "/api/reports/by-card-type",
         "/api/reports/by-day",
+        "/api/reports/by-source",
     ):
         r = client.get(path)
         assert r.status_code == 401, path

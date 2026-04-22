@@ -19,6 +19,7 @@ vi.mock("../../src/api/transactions", () => ({
   getByCard: vi.fn(),
   getByCardType: vi.fn(),
   getByDay: vi.fn(),
+  getBySource: vi.fn(),
   getSummary: vi.fn(),
   listAllTransactions: vi.fn(),
   updateTransaction: vi.fn(),
@@ -80,9 +81,9 @@ vi.mock("../../src/components/dashboard/ChartsPanel", () => ({
   ),
 }));
 vi.mock("../../src/components/dashboard/InsightsPanel", () => ({
-  default: ({ entries, byCard }) => (
+  default: ({ entries, byCard, bySource }) => (
     <div data-testid="insights">
-      entries:{entries.length} byCard:{byCard.length}
+      entries:{entries.length} byCard:{byCard.length} src:{bySource?.upload ?? 0}/{bySource?.manual ?? 0}
     </div>
   ),
 }));
@@ -117,6 +118,7 @@ import {
   getByCard,
   getByCardType,
   getByDay,
+  getBySource,
   getSummary,
   listAllTransactions,
   updateTransaction,
@@ -152,8 +154,16 @@ function primeApis(overrides = {}) {
   getByCard.mockResolvedValue([
     { card_number: "4267628872390355", card_type: "Visa", count: 1, total_amount: "100" },
   ]);
+  getBySource.mockResolvedValue({ upload: 9999, manual: 1, unknown: 0, total: 10000 });
   for (const [k, v] of Object.entries(overrides)) {
-    const fn = { listAllTransactions, getSummary, getByCardType, getByDay, getByCard }[k];
+    const fn = {
+      listAllTransactions,
+      getSummary,
+      getByCardType,
+      getByDay,
+      getByCard,
+      getBySource,
+    }[k];
     if (fn) fn.mockReset().mockImplementation(v);
   }
 }
@@ -232,6 +242,7 @@ describe("Dashboard page (full render)", () => {
     getByCardType.mockResolvedValue([]);
     getByDay.mockResolvedValue([]);
     getByCard.mockResolvedValue([]);
+    getBySource.mockResolvedValue({ upload: 0, manual: 0, unknown: 0, total: 0 });
 
     const { container } = render(<Dashboard />);
     expect(container.querySelector(".animate-spin")).toBeInTheDocument();
@@ -258,7 +269,7 @@ describe("Dashboard page (full render)", () => {
       /entries:1 byCardType:1 byDay:1/
     );
     expect(screen.getByTestId("insights").textContent).toMatch(
-      /entries:1 byCard:1/
+      /entries:1 byCard:1 src:9999\/1/
     );
   });
 
@@ -268,6 +279,7 @@ describe("Dashboard page (full render)", () => {
     getByCardType.mockResolvedValue([]);
     getByDay.mockResolvedValue([]);
     getByCard.mockResolvedValue([]);
+    getBySource.mockResolvedValue({ upload: 0, manual: 0, unknown: 0, total: 0 });
 
     render(<Dashboard />);
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("boom"));

@@ -22,6 +22,7 @@ import {
   bulkCreateTransactions,
   createTransaction,
   deleteTransaction,
+  getBySource,
   listAllTransactions,
   listTransactions,
   restoreTransaction,
@@ -233,6 +234,15 @@ describe("service methods hit the right endpoint + params", () => {
     ]);
     const body = api.post.mock.calls[0][1];
     expect(body.items[0].transaction_date).toBe(new Date(when).toISOString());
+  });
+
+  it("getBySource hits /reports/by-source and returns the unwrapped payload", async () => {
+    api.get.mockResolvedValueOnce({
+      data: { data: { upload: 9999, manual: 1, unknown: 0, total: 10000 } },
+    });
+    const out = await getBySource();
+    expect(api.get).toHaveBeenCalledWith("/reports/by-source");
+    expect(out).toEqual({ upload: 9999, manual: 1, unknown: 0, total: 10000 });
   });
 
   it("uploadFile sends multipart with progress callback", async () => {

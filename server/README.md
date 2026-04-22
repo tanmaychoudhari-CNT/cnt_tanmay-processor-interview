@@ -161,7 +161,7 @@ All routes (except `/api/auth/login` and `/api/health`) require
 | DELETE | `/api/transactions/{id}` | Soft delete |
 | POST | `/api/transactions/{id}/restore` | Undelete |
 | POST | `/api/transactions/bulk` | Insert up to 500 rows (source = `manual_entry`) |
-| POST | `/api/uploads` | Multipart CSV / JSON / XML (source = `file_upload`) |
+| POST | `/api/uploads` | Multipart CSV / JSON / XML (source = `Batch`) |
 | GET  | `/api/reports/summary` | KPIs: count, sum, avg, hi/lo, deleted |
 | GET  | `/api/reports/by-card` | Top cards by volume |
 | GET  | `/api/reports/by-card-type` | Brand-mix donut data |

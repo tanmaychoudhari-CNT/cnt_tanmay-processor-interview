@@ -133,3 +133,8 @@ export const getByDay = (limit = 90) =>
 
 export const getByCard = (limit = 10) =>
   unwrap(api.get("/reports/by-card", { params: { limit } }));
+
+// Real-time source split — counts of every active row in the DB grouped
+// by `source`. The Insights panel reads this so the Batch vs Manual ratio
+// reflects the full dataset, not just the 10k entries window.
+export const getBySource = () => unwrap(api.get("/reports/by-source"));

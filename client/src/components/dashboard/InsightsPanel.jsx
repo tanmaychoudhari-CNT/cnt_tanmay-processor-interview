@@ -6,10 +6,11 @@ import { formatCurrency, formatNumber, maskCardNumber } from "../../lib/utils";
 
 // Two side-by-side insight cards that summarize the loaded dataset from a
 // different angle than the big KPIs. Top-cards ranking comes from the
-// server's /reports/by-card aggregation (full dataset); source-split is
-// derived from `entries` (capped at 10k by the list endpoint — acceptable
-// since the server doesn't expose a source-breakdown endpoint yet).
-export default function InsightsPanel({ entries, byCard = [] }) {
+// server's /reports/by-card aggregation (full dataset); source-split now
+// comes from /reports/by-source so it reflects every row in the DB rather
+// than the 10k entries window. We still fall back to deriving from
+// `entries` if the server payload is absent (e.g. older callers / tests).
+export default function InsightsPanel({ entries, byCard = [], bySource = null }) {
   const topCards = useMemo(() => {
     if (byCard.length) {
       return byCard.slice(0, 5).map((c) => ({
@@ -39,11 +40,23 @@ export default function InsightsPanel({ entries, byCard = [] }) {
   }, [entries, byCard]);
 
   const sourceSplit = useMemo(() => {
-    let upload = 0;
-    let manual = 0;
-    for (const e of entries) {
-      if (e.source === "file_upload") upload += 1;
-      else if (e.source === "manual_entry") manual += 1;
+    // Prefer the server-side aggregate so the split reflects every row in
+    // the DB. Fall back to deriving from the in-memory entries (capped at
+    // 10k) only when no aggregate was passed in.
+    let upload;
+    let manual;
+    if (bySource && typeof bySource.total === "number") {
+      upload = bySource.upload ?? 0;
+      manual = bySource.manual ?? 0;
+    } else {
+      upload = 0;
+      manual = 0;
+      for (const e of entries) {
+        // Accept both the canonical "Batch" and the legacy "file_upload"
+        // value so pre-rename rows still bucket correctly.
+        if (e.source === "Batch" || e.source === "file_upload") upload += 1;
+        else if (e.source === "manual_entry") manual += 1;
+      }
     }
     const total = upload + manual;
     return {
@@ -53,7 +66,7 @@ export default function InsightsPanel({ entries, byCard = [] }) {
       uploadPct: total ? Math.round((upload / total) * 100) : 0,
       manualPct: total ? Math.round((manual / total) * 100) : 0,
     };
-  }, [entries]);
+  }, [entries, bySource]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

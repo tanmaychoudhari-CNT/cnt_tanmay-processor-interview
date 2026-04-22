@@ -77,7 +77,7 @@ def create(
     user: User = Depends(current_user),
 ):
     # Anything created via this endpoint is flagged `manual_entry`.
-    # File-uploaded rows go through /uploads and get `file_upload`.
+    # File-uploaded rows go through /uploads and get `Batch`.
     # CardValidationError → 400 is handled globally in exception_handlers.py.
     txn = create_transaction(db, payload, user_id=user.id, source="manual_entry")
     return StandardResponse(data=TransactionOut.model_validate(txn))

@@ -25,6 +25,7 @@ from .transaction_service import (
     by_card,
     by_card_type,
     by_day,
+    by_source,
 )
 from .file_parser import parse_upload
 
@@ -51,5 +52,6 @@ __all__ = [
     "by_card",
     "by_card_type",
     "by_day",
+    "by_source",
     "parse_upload",
 ]

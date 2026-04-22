@@ -370,7 +370,9 @@ function StatusBadge({ status }) {
 }
 
 function SourceBadge({ source, fileName }) {
-  const isUpload = source === "file_upload";
+  // "Batch" is the canonical upload source; "file_upload" is the legacy
+  // value still present on rows inserted before the rename.
+  const isUpload = source === "Batch" || source === "file_upload";
   return (
     <div className="flex items-center gap-2">
       <span

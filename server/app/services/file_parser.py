@@ -203,7 +203,7 @@ def parse_upload(
             Transaction(
                 user_id=user_id,
                 status="success",
-                source="file_upload",
+                source="Batch",
                 file_name=filename,
                 card_number=normalized,
                 amount=amount,

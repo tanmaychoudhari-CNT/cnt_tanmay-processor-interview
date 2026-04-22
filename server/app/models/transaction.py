@@ -25,7 +25,9 @@ from app.database import Base
 
 
 TX_STATUSES = ("success", "failed", "pending")
-TX_SOURCES = ("file_upload", "manual_entry")
+# "Batch" is the canonical source for file uploads; "file_upload" is
+# accepted for backward compatibility with rows inserted before the rename.
+TX_SOURCES = ("Batch", "manual_entry", "file_upload")
 
 
 def _utcnow() -> datetime:
