@@ -1,4 +1,4 @@
-"""Pydantic DTOs for the /reports/* aggregation endpoints and /uploads.
+"""Pydantic DTOs for the /reports/* aggregation endpoints.
 
 Amounts use `Decimal` (not float) because SUM/AVG over currency must not
 lose precision — Pydantic will serialize them as strings, which matches
@@ -6,7 +6,6 @@ what the frontend expects.
 """
 from datetime import date
 from decimal import Decimal
-from typing import List
 
 from pydantic import BaseModel
 
@@ -41,13 +40,3 @@ class ByDayItem(BaseModel):
     day: date
     total_amount: Decimal
     count: int
-
-
-class UploadResult(BaseModel):
-    # `rejected_samples` holds up to 5 "<card>: <reason>" strings so the UI
-    # can surface a useful error without flooding the response on a bad file.
-    filename: str
-    source_format: str
-    accepted: int
-    rejected: int
-    rejected_samples: List[str] = []

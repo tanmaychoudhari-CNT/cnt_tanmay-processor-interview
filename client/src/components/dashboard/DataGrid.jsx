@@ -190,7 +190,7 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
                 className="px-6 py-4 cursor-pointer hover:text-accent transition-colors"
                 onClick={() => handleSort("timestamp")}
               >
-                <SortHeader label="Time" active={sortBy === "timestamp"} dir={sortDir} />
+                <SortHeader label="Date" active={sortBy === "timestamp"} dir={sortDir} />
               </th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
@@ -385,7 +385,7 @@ function SourceBadge({ source, fileName }) {
         ) : (
           <PenLine className="w-3 h-3" />
         )}
-        {isUpload ? "Upload" : "Batch"}
+        {isUpload ? "Batch" : "Manual"}
       </span>
       {fileName && (
         <span className="text-[11px] text-gray-400 dark:text-gray-500 font-normal truncate max-w-[140px]">

@@ -2,148 +2,104 @@
 
 A full-stack credit-card transaction processor with a secure dashboard.
 
-- **Frontend:** React 18 + Vite + Tailwind CSS + Recharts
+- **Frontend:** React 18 + Vite + Tailwind + Recharts
 - **Backend:** Python 3.11+ / FastAPI / SQLAlchemy 2 / Pydantic v2
-- **Database:** PostgreSQL (managed via Alembic migrations)
-- **Auth:** JWT (bcrypt-hashed passwords, stateless tokens)
+- **Database:** PostgreSQL (SQLite in-memory in tests)
+- **Auth:** JWT, bcrypt-hashed passwords, stateless tokens
+
+For deep-dive setup and per-module docs:
+
+- [`server/README.md`](server/README.md) — architecture, env vars, API table, troubleshooting
+- [`client/README.md`](client/README.md) — routing, axios wiring, build + preview
+
+This file is the landing page — what the system does, how the pieces fit,
+and the shortest path from "fresh clone" to "logged-in dashboard."
 
 ## Features
 
-- File ingest for **CSV / JSON / XML** batches with schema validation
-- Manual bulk entry (up to 500 rows per submission)
-- Full CRUD over transactions via authenticated REST API
-- Server-side **search** by card number, **sort** by amount/timestamp, and **pagination**
-- Reports: summary, by-card, by-card-type, by-day, rejected log
-- Charts: bar (volume by card type), pie (count by card type), line (daily trend)
-- Card-type classification from the leading digit
-  - **3 → Amex · 4 → Visa · 5 → MasterCard · 6 → Discover**
-  - Anything else (or non-digits, invalid length) is written to `rejected_transactions` with a reason
+- **File ingest** — CSV / JSON / XML with magic-byte sniffing + row cap
+- **Manual entry** — single-transaction form or bulk (≤ 500 rows / request)
+- **Full CRUD** over transactions via authenticated REST API
+- **Server-side** search, filtering, sorting, and pagination
+- **Reports** — summary KPIs, top cards, brand mix, daily trend
+- **Charts** — donut (brand mix), bar / area (daily volume), powered by Recharts
+- **Card-type classification** from the leading digit:
+  `3 → Amex · 4 → Visa · 5 → MasterCard · 6 → Discover`
+  Anything else is rejected at the parser and never touches the DB.
+- **Soft delete** with restore — deleted rows are hidden but recoverable
+- **Per-user scoping** — every query filters by `user_id`; one user's rows
+  are invisible to another
+- **Per-IP rate limiting** — global 120/min, stricter on login / upload / bulk
+
+## Architecture
+
+```
+┌─────────────┐   HTTP + JWT   ┌──────────────────────────────┐   SQL    ┌────────────┐
+│  React SPA  │ ─────────────▶ │  FastAPI (api → services →   │ ───────▶ │ PostgreSQL │
+│  (Vite)     │ ◀───────────── │  database), layered strictly │ ◀─────── │            │
+└─────────────┘                └──────────────────────────────┘          └────────────┘
+```
+
+The backend enforces a **strict three-layer separation** — no layer-skipping:
+
+- **`app/api/`** — FastAPI routers only. No SQL. No try/except for domain
+  errors (global handlers map them to HTTP).
+- **`app/services/`** — business rules, input normalization, orchestration.
+  Never calls `db.add` / `select(...)`. Delegates every DB touch downward.
+- **`app/database/`** — every SELECT / INSERT / UPDATE / DELETE. One module
+  per table (`user_db.py`, `transaction_db.py`).
+
+See [`server/README.md`](server/README.md#architecture) for the full rationale.
 
 ## Repository layout
 
 ```
 .
-├── client/                 # React (Vite) frontend
-│   └── src/{components,pages,services,hooks,context,utils,styles}
-├── server/                 # FastAPI backend
-│   ├── app/
-│   │   ├── config/         # Pydantic settings, env
-│   │   ├── database/       # Engine + session factory
-│   │   ├── models/         # SQLAlchemy ORM
-│   │   ├── schemas/        # Pydantic I/O models
-│   │   ├── services/       # Business logic (auth, parsing, CRUD, reports)
-│   │   └── routes/         # FastAPI routers (auth, transactions, uploads, reports)
-│   ├── alembic/            # Database migrations
-│   └── main.py             # ASGI entrypoint
-├── data/                   # Sample "real" dataset (CSV/JSON/XML)
-└── test/                   # Small dataset for development
+├── client/              # React (Vite) frontend          → see client/README.md
+├── server/              # FastAPI backend                → see server/README.md
+├── data/                # Sample datasets (CSV / JSON / XML, ~10k rows each)
+└── README.md            # you are here
 ```
 
 ## Prerequisites
 
-- Python 3.11+
-- Node.js 18+
-- PostgreSQL 13+ running locally
+- **Python 3.11+**
+- **Node.js 18+**
+- **PostgreSQL 13+** running locally
 
-## Running the test suites
+## Quick start
 
-**Backend** — 101 unit + integration tests (pytest + httpx, SQLite in-memory).
-
-Everything below assumes the server virtualenv is active. If `pytest` or `pip`
-reports "command not found", you haven't activated it — see the one-liners at
-the bottom of this block.
-
-```bash
-cd server
-pip install -r requirements-test.txt
-pytest                      # run everything
-pytest --cov=app            # with coverage
-pytest tests/test_card_classifier.py -v   # a single file
-
-# Detailed HTML report + HTML coverage (written to server/reports/):
-pytest --html=reports/test-report.html --self-contained-html \
-       --cov=app --cov-report=html:reports/coverage
-# → open reports/test-report.html (per-test pass/fail, stdout, duration)
-#   open reports/coverage/index.html (line-by-line source coverage)
-```
-
-**If your venv isn't activated**, invoke the venv's Python directly:
-
-```powershell
-# Windows PowerShell — activate the venv first:
-.\.venv\Scripts\Activate.ps1
-# (one-time fix if PowerShell blocks activation)
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-
-# Windows cmd.exe:
-.venv\Scripts\activate.bat
-
-# Git Bash / macOS / Linux:
-source .venv/Scripts/activate   # or .venv/bin/activate on macOS/Linux
-
-# …or skip activation entirely:
-.\.venv\Scripts\python -m pytest         # Windows
-./.venv/bin/python -m pytest             # macOS/Linux
-```
-
-**Frontend** — 45 tests (Vitest + React Testing Library + jsdom):
-
-```bash
-cd client
-npm test                   # CI run
-npm run test:watch         # watch mode
-npm run test:coverage      # v8 coverage (writes coverage/index.html)
-npm run test:report        # full HTML report + coverage in one run
-npm run test:ui            # interactive Vitest UI (live test explorer)
-```
-
-After `npm run test:report`:
-- `client/html/index.html` — per-file test tree, durations, and assertions.
-- `client/coverage/index.html` — v8 line/branch coverage.
-
-Preview the static report locally with `npx vite preview --outDir html`, or
-just open the file directly in a browser.
-
-Tests never touch the live Postgres DB or hit the network — the backend uses
-an in-memory SQLite engine, and the frontend mocks axios via `vi.mock`.
-
-## 1. Database
-
-Create the database:
+### 1. Database
 
 ```bash
 psql -U postgres -c "CREATE DATABASE card_processor;"
 ```
 
-## 2. Backend
+The `users` table is auto-created by SQLAlchemy on first startup. The
+`transactions` table is assumed to exist — create it once via your
+team's SQL script or Postgres client before running the server.
+
+### 2. Backend
 
 ```bash
 cd server
 python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-
+.\.venv\Scripts\activate          # Windows; source .venv/bin/activate on macOS/Linux
 pip install -r requirements.txt
-cp .env.example .env          # edit DATABASE_URL if needed
-
-# apply migrations
-alembic upgrade head
-
-# run
+cp .env.example .env              # edit DATABASE_URL + JWT_SECRET
 uvicorn main:app --reload --port 8000
 ```
 
-The API boots at http://localhost:8000 and OpenAPI docs are live at
-[http://localhost:8000/docs](http://localhost:8000/docs). On first startup a
-default admin user (`admin` / `admin123`) is created automatically — change
-credentials via `SEED_ADMIN_*` in `.env`.
+API at **http://localhost:8000** · OpenAPI docs at **http://localhost:8000/docs**.
 
-> The app also calls `Base.metadata.create_all()` on startup as a convenience
-> for local dev. Alembic remains the source of truth for schema changes.
+On first boot the admin user is seeded from `SEED_ADMIN_USERNAME` /
+`SEED_ADMIN_PASSWORD` (defaults `admin` / `admin123`). Override both for
+anything non-local.
 
-## 3. Frontend
+Full env-var reference + prod hardening checklist in
+[`server/README.md`](server/README.md#environment-variables).
+
+### 3. Frontend
 
 ```bash
 cd client
@@ -151,79 +107,94 @@ npm install
 npm run dev
 ```
 
-The UI starts at http://localhost:5173. Vite proxies `/api/*` to the backend,
-so no CORS config is needed in dev. For production builds, set
-`VITE_API_BASE_URL=https://api.example.com/api` in `client/.env`.
+UI at **http://localhost:5173**. Vite proxies `/api/*` to `:8000`, so no
+CORS config is needed in dev.
 
-## 4. Try it
+### 4. Try it
 
-1. Visit http://localhost:5173, sign in as `admin` / `admin123`.
-2. Go to **Upload**, drop one of the sample files from `test/` or `data/`.
-3. Return to **Dashboard** to see the paginated, searchable table and summary panel.
-4. Visit **Reports** for charts and the rejected-transaction audit.
+1. Visit http://localhost:5173 and sign in as `admin` / `admin123`.
+2. Go to **Upload** and drop one of the sample files from `data/`.
+3. Return to **Dashboard** to see the paginated, filterable table and
+   summary panel.
+4. Scroll to **Reports** for the brand-mix donut and daily trend chart.
+
+## Running the tests
+
+Both suites run without touching your live database — backend uses
+in-memory SQLite, frontend mocks axios.
+
+```bash
+# Backend — 102 tests (pytest + httpx + SQLite in-memory)
+cd server && pytest
+
+# Frontend — 45 tests (Vitest + React Testing Library + jsdom)
+cd client && npm test
+```
+
+Full test commands (coverage, HTML reports, watch mode, Vitest UI) are in
+each subfolder's README.
 
 ## API overview
 
 All routes (except `/api/auth/login` and `/api/health`) require
 `Authorization: Bearer <token>`.
 
-| Method | Path                              | Purpose                                    |
-| ------ | --------------------------------- | ------------------------------------------ |
-| POST   | `/api/auth/login`                 | Exchange credentials for a JWT             |
-| GET    | `/api/auth/me`                    | Current user profile                       |
-| POST   | `/api/auth/logout`                | Client-side logout confirmation            |
-| GET    | `/api/transactions`               | List (page, page_size, search, sort, type) |
-| GET    | `/api/transactions/{id}`          | Retrieve one                               |
-| POST   | `/api/transactions`               | Create one                                 |
-| PUT    | `/api/transactions/{id}`          | Update one                                 |
-| DELETE | `/api/transactions/{id}`          | Delete one                                 |
-| POST   | `/api/transactions/bulk`          | Bulk manual entry                          |
-| POST   | `/api/uploads`                    | Multipart CSV / JSON / XML upload          |
-| GET    | `/api/reports/summary`            | Dashboard KPIs                             |
-| GET    | `/api/reports/by-card`            | Totals grouped by card number              |
-| GET    | `/api/reports/by-card-type`       | Totals grouped by card type                |
-| GET    | `/api/reports/by-day`             | Daily totals                               |
-| GET    | `/api/reports/rejected`           | Paged list of rejected records             |
+| Method | Path | Purpose |
+|---|---|---|
+| POST   | `/api/auth/login` | Exchange credentials for a JWT |
+| GET    | `/api/auth/me` | Current user profile |
+| POST   | `/api/auth/logout` | Client-side logout confirmation |
+| GET    | `/api/transactions` | Paginated + filtered list |
+| GET    | `/api/transactions/{id}` | Retrieve one |
+| POST   | `/api/transactions` | Create one (manual entry) |
+| PUT    | `/api/transactions/{id}` | Update one |
+| DELETE | `/api/transactions/{id}` | Soft delete |
+| POST   | `/api/transactions/{id}/restore` | Undelete |
+| POST   | `/api/transactions/bulk` | Bulk manual entry (≤ 500) |
+| POST   | `/api/uploads` | Multipart CSV / JSON / XML upload |
+| GET    | `/api/reports/summary` | Dashboard KPIs |
+| GET    | `/api/reports/by-card` | Totals per distinct card |
+| GET    | `/api/reports/by-card-type` | Totals per brand |
+| GET    | `/api/reports/by-day` | Daily volume series |
+| GET    | `/api/health` | Liveness probe |
 
-All responses follow a consistent envelope:
+Every success response uses the same envelope:
 
 ```json
-{ "success": true, "data": ..., "message": null }
+{ "success": true, "data": { ... }, "message": null }
 ```
+
+The client's axios `unwrap` helper strips the envelope so callers receive
+`data` directly.
 
 ## Design notes / tradeoffs
 
-- **Card classification** uses only the leading digit, as specified in the
-  original README. Luhn and strict Amex length checks were deliberately skipped
-  because the provided sample data (16-digit PANs starting with `3`) does not
-  satisfy them; basic length sanity `[12, 19]` is still enforced.
-- **Money uses `Numeric(14, 2)` + Python `Decimal`** end-to-end; no floats touch
-  the database or the API responses.
-- **Rejection audit**: bad records land in `rejected_transactions` with the raw
-  input and a human-readable reason — useful for later reconciliation.
-- **Stateless JWT** auth means logout is client-side. For stricter revocation,
-  plug in a Redis denylist keyed by token `jti`.
-- **Frontend state**: plain React hooks + axios. Intentionally no React Query /
-  Redux to keep the scope tight for this exercise.
-- **Alembic vs `create_all`**: startup calls `create_all` so a brand-new dev
-  machine works without running migrations first, but Alembic remains the
-  authoritative schema tool for anything non-local.
-
-## Extension points
-
-The service layer is organized so these should each be small additions:
-
-- New file formats (e.g. `.parquet`, `.xlsx`) → add a parser in
-  `app/services/file_parser.py` and extend `SUPPORTED_EXTENSIONS`.
-- New transaction types → add a discriminator column on `Transaction` and a
-  factory in `transaction_service.create_transaction`.
-- Role-based access → add a `role` column on `User`, a role-checking dependency
-  next to `current_user`, and apply it to sensitive routers.
+- **Card classification** uses only the leading digit per spec. Luhn
+  isn't enforced — the provided sample data (16-digit PANs starting with
+  `3`) wouldn't satisfy it. Basic length sanity `[12, 20]` is still
+  checked; mismatches fail the parser and never touch the DB.
+- **Money is `Numeric(12, 2)` + Python `Decimal`** end-to-end. No float
+  touches the database or an API response.
+- **Soft delete** instead of physical `DELETE`. `is_deleted` is nullable
+  so pre-column legacy rows keep showing as active (`false OR NULL`).
+- **Per-user scoping** is enforced at the DB layer on every query, not
+  the route layer. A new route can't accidentally leak another user's
+  rows — the rule lives below the business logic.
+- **Stateless JWT** — logout is client-side (drop the token). For strict
+  revocation, add a Redis deny-list keyed by token `jti`.
+- **Startup idempotence** — `Base.metadata.create_all()` + `CREATE INDEX
+  IF NOT EXISTS` run on every boot. Safe to restart repeatedly; no
+  separate migration step.
+- **Frontend state** — plain React hooks + axios + context. No React
+  Query / Redux, deliberately, to keep the scope tight.
 
 ## Sample data
 
-`test/` holds small fixtures (~100 rows each) for development.
-`data/` holds the larger "real" dataset (~10k rows each).
+`data/` ships three equivalent sample files (~10k rows each):
+
+- `data.csv`
+- `data.json`
+- `data.xml`
 
 Upload any of them through the UI or via `curl`:
 
@@ -232,3 +203,17 @@ curl -H "Authorization: Bearer $TOKEN" \
      -F "file=@data/data.csv" \
      http://localhost:8000/api/uploads
 ```
+
+## Extension points
+
+- **New file formats** (e.g. `.xlsx`, `.parquet`) — add a parser in
+  `server/app/services/file_parser.py` and extend `SUPPORTED_EXTENSIONS`.
+- **New user roles** — add a `role` column to `User`, a role-checking
+  dependency next to `current_user` in `api/_deps.py`, and apply it to
+  sensitive routers.
+- **Harder rate limiting** — swap the in-process slowapi backend for
+  Redis via `Limiter(..., storage_uri="redis://...")` before running
+  multi-worker / multi-replica.
+- **New aggregations** — add a query in `app/database/transaction_db.py`,
+  a thin service wrapper in `app/services/transaction_service.py`, and a
+  route in `app/api/reports.py`. Matches the existing pattern exactly.

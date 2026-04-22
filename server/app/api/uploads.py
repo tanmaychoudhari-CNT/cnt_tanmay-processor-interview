@@ -6,37 +6,12 @@ from app.database import get_db
 from app.models import User
 from app.schemas import StandardResponse, UploadResult
 from app.services import parse_upload
-from app.services.file_parser import SUPPORTED_EXTENSIONS, UnsupportedFileError
+from app.services.file_parser import SUPPORTED_EXTENSIONS, looks_like_declared_format
 
 from ._deps import current_user, limiter
 
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
-
-
-# Magic-byte sniffers for each supported format. A filename-extension check
-# is trivial to bypass (rename malicious.exe → data.csv), so we also peek
-# at the file contents before handing them to the parser.
-#
-# Heuristics kept loose: CSV is plain text (no magic), JSON starts with
-# `{` or `[` after whitespace, XML starts with `<`. If the content looks
-# wildly wrong we reject early.
-def _looks_like(ext: str, head: bytes) -> bool:
-    try:
-        text = head.lstrip().decode("utf-8", errors="strict")
-    except UnicodeDecodeError:
-        return False
-    if not text:
-        return False
-    if ext == ".json":
-        return text[0] in "[{"
-    if ext == ".xml":
-        return text.startswith("<")
-    if ext == ".csv":
-        # CSV is just text — we reject binary-looking content but accept
-        # anything decodable to utf-8 plus a printable first char.
-        return text[0].isprintable()
-    return True
 
 
 @router.post("", response_model=StandardResponse[UploadResult])
@@ -78,23 +53,19 @@ async def upload(
     content = b"".join(chunks)
 
     # Content sniffing — extension lied, reject.
-    if not _looks_like(matched_ext, content[:64]):
+    if not looks_like_declared_format(matched_ext, content[:64]):
         raise HTTPException(
             status_code=400,
             detail=f"file contents do not match the declared {matched_ext} format",
         )
 
-    try:
-        result = parse_upload(
-            db,
-            file.filename or "upload",
-            content,
-            user_id=user.id,
-            max_rows=settings.max_upload_rows,
-        )
-    except UnsupportedFileError as err:
-        raise HTTPException(status_code=400, detail=str(err))
-    except ValueError as err:
-        raise HTTPException(status_code=400, detail=f"failed to parse file: {err}")
-
+    # UnsupportedFileError / FileParseError → 400 is handled globally in
+    # exception_handlers.py — no try/except needed here.
+    result = parse_upload(
+        db,
+        file.filename or "upload",
+        content,
+        user_id=user.id,
+        max_rows=settings.max_upload_rows,
+    )
     return StandardResponse(data=UploadResult(**result))

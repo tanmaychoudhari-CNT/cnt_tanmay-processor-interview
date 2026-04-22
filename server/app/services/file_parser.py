@@ -1,5 +1,9 @@
 """Bulk file-upload parser for CSV, JSON, and XML transaction feeds.
 
+Parsing, normalization, and card/amount/timestamp validation live here.
+All DB writes (batch flush, final commit, rollback on abort) go through
+`app.database.transaction_db` so this module never builds SQL directly.
+
 Writes rows in batches of 500 to keep memory flat on large files, and
 rejects individual bad rows instead of failing the whole import (up to 5
 rejection reasons are surfaced back to the client).
@@ -17,6 +21,7 @@ from xml.etree import ElementTree as ET
 
 from sqlalchemy.orm import Session
 
+from app.database import transaction_db
 from app.models import Transaction
 from app.services.card_classifier import CardValidationError, classify_card
 
@@ -28,7 +33,44 @@ BATCH_SIZE = 500
 
 
 class UnsupportedFileError(ValueError):
+    """Raised when the uploaded file's extension isn't one we accept."""
     pass
+
+
+class FileParseError(ValueError):
+    """Raised when a supported-extension file can't actually be parsed
+    (malformed JSON/XML, row cap exceeded, etc.). Distinct from
+    UnsupportedFileError so the API layer can map both to 400 with
+    slightly different messaging."""
+    pass
+
+
+def looks_like_declared_format(ext: str, head: bytes) -> bool:
+    """Magic-byte sniffer — does the head of the file actually look like
+    its declared extension?
+
+    An extension check alone is trivial to bypass (rename malicious.exe
+    to data.csv), so the API layer calls this as a second-gate sanity
+    check before spending CPU on the full parser.
+
+    Heuristics kept loose:
+      * JSON starts with `{` or `[` after whitespace
+      * XML starts with `<`
+      * CSV is plain text — we only reject clearly-binary content
+    """
+    try:
+        text = head.lstrip().decode("utf-8", errors="strict")
+    except UnicodeDecodeError:
+        return False
+    if not text:
+        return False
+    if ext == ".json":
+        return text[0] in "[{"
+    if ext == ".xml":
+        return text.startswith("<")
+    if ext == ".csv":
+        return text[0].isprintable()
+    return True
 
 
 def _to_decimal(value) -> Decimal:
@@ -64,10 +106,10 @@ def _iter_json(content: bytes) -> Iterable[dict]:
     if isinstance(data, dict) and "transactions" in data:
         data = data["transactions"]
     if not isinstance(data, list):
-        raise ValueError("JSON root must be a list of transactions or { transactions: [...] }")
+        raise FileParseError("JSON root must be a list of transactions or { transactions: [...] }")
     for row in data:
         if not isinstance(row, dict):
-            raise ValueError("JSON array items must be objects")
+            raise FileParseError("JSON array items must be objects")
         yield row
 
 
@@ -132,8 +174,8 @@ def parse_upload(
         if max_rows is not None and seen > max_rows:
             # Abort — the caller asked for a cap. Roll back anything we
             # already flushed into the session so we don't half-commit.
-            db.rollback()
-            raise ValueError(
+            transaction_db.rollback(db)
+            raise FileParseError(
                 f"file exceeds the {max_rows}-row limit (aborted at row {seen})"
             )
 
@@ -166,13 +208,11 @@ def parse_upload(
         accepted += 1
 
         if len(batch) >= BATCH_SIZE:
-            db.add_all(batch)
-            db.flush()
+            transaction_db.flush_transactions(db, batch)
             batch = []
 
-    if batch:
-        db.add_all(batch)
-    db.commit()
+    # Final commit picks up any tail-batch rows and any earlier flushes.
+    transaction_db.insert_transactions(db, batch)
 
     return {
         "filename": filename,

@@ -12,12 +12,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import User
-from app.services import decode_token
+from app.services import decode_token, get_user_by_username
 
 
 # `auto_error=False` lets us return our own 401 shape instead of the default
@@ -48,7 +47,7 @@ def current_user(
     username = decode_token(credentials.credentials)
     if not username:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid or expired token")
-    user = db.scalar(select(User).where(User.username == username))
+    user = get_user_by_username(db, username)
     if not user:
         # Token decoded but the user was deleted under us — treat as invalid.
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user not found")

@@ -1,13 +1,23 @@
+"""Authentication business logic.
+
+Pure logic only — password hashing, JWT minting/decoding, and the
+authentication flow. All user-table queries are delegated to
+`app.database.user_db` so this module never builds SQL directly.
+"""
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import bcrypt
 from jose import JWTError, jwt
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.database import user_db
 from app.models import User
+
+
+logger = logging.getLogger(__name__)
 
 
 # bcrypt hard-caps input at 72 bytes. Truncate to match the cap silently so
@@ -68,10 +78,16 @@ def decode_token(token: str) -> Optional[str]:
 
 
 def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:
-    user = db.scalar(select(User).where(User.username == username))
+    user = user_db.get_user_by_username(db, username)
     if not user or not verify_password(password, user.password_hash):
         return None
     return user
+
+
+def get_user_by_username(db: Session, username: str) -> Optional[User]:
+    """Service-layer accessor used by the auth dependency to resolve the
+    bearer-token subject to a User row."""
+    return user_db.get_user_by_username(db, username)
 
 
 def ensure_seed_admin(db: Session) -> None:
@@ -80,17 +96,14 @@ def ensure_seed_admin(db: Session) -> None:
     Skips seeding if the admin password is too short — forces operators to
     configure a real password via SEED_ADMIN_PASSWORD before bootstrap.
     """
-    existing = db.scalar(select(User).limit(1))
-    if existing:
+    if user_db.get_first_user(db):
         return
     try:
         password_hash = hash_password(settings.seed_admin_password)
     except WeakPasswordError:
         # Don't fall back to seeding with a weak password — log and skip.
         # Operator will see no admin user and must set SEED_ADMIN_PASSWORD.
-        import logging
-
-        logging.getLogger(__name__).warning(
+        logger.warning(
             "refusing to seed admin: SEED_ADMIN_PASSWORD is shorter than %d chars",
             settings.password_min_length,
         )
@@ -99,5 +112,4 @@ def ensure_seed_admin(db: Session) -> None:
         username=settings.seed_admin_username,
         password_hash=password_hash,
     )
-    db.add(admin)
-    db.commit()
+    user_db.insert_user(db, admin)

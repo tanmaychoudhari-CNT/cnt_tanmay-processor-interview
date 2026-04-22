@@ -9,6 +9,7 @@ from .auth_service import (
     decode_token,
     authenticate_user,
     ensure_seed_admin,
+    get_user_by_username,
     validate_password_strength,
     WeakPasswordError,
 )
@@ -36,6 +37,7 @@ __all__ = [
     "decode_token",
     "authenticate_user",
     "ensure_seed_admin",
+    "get_user_by_username",
     "validate_password_strength",
     "WeakPasswordError",
     "create_transaction",

@@ -111,7 +111,7 @@ export default function InsightsPanel({ entries, byCard = [] }) {
               Processing source
             </h3>
             <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mt-1">
-              Upload vs manual entry
+              Batch vs manual
             </p>
           </div>
           <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 tabular-nums">
@@ -125,7 +125,7 @@ export default function InsightsPanel({ entries, byCard = [] }) {
           <div className="space-y-6">
             <SourceRow
               icon={Upload}
-              label="File upload"
+              label="Batch"
               count={sourceSplit.upload}
               pct={sourceSplit.uploadPct}
               colorClass="bg-sky-500"
@@ -133,7 +133,7 @@ export default function InsightsPanel({ entries, byCard = [] }) {
             />
             <SourceRow
               icon={PenLine}
-              label="Manual entry"
+              label="Manual"
               count={sourceSplit.manual}
               pct={sourceSplit.manualPct}
               colorClass="bg-violet-500"

@@ -69,8 +69,8 @@ describe("InsightsPanel", () => {
         ]}
       />
     );
-    expect(screen.getByText(/File upload/)).toBeInTheDocument();
-    expect(screen.getByText(/Manual entry/)).toBeInTheDocument();
+    expect(screen.getByText("Batch")).toBeInTheDocument();
+    expect(screen.getByText("Manual")).toBeInTheDocument();
     // 3 uploads, 1 manual → 75% / 25%.
     expect(screen.getByText(/75%/)).toBeInTheDocument();
     expect(screen.getByText(/25%/)).toBeInTheDocument();

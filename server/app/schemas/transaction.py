@@ -111,9 +111,64 @@ class ManualBulkRequest(BaseModel):
     items: List[ManualEntry] = Field(..., min_length=1, max_length=500)
 
 
+class TransactionFilters(BaseModel):
+    """Query-string model for GET /transactions.
+
+    Centralizes the 15+ filter knobs instead of a huge per-parameter
+    signature on the route. FastAPI resolves this via `Depends()` — each
+    field becomes a `?field=value` query param with the same validation
+    rules (min/max length, pattern, regex) it would have inline.
+
+    `extra="forbid"` rejects unknown query params (e.g. `?pageSize=` vs
+    `?page_size=`) with a 422 instead of silently ignoring them — catches
+    client typos early.
+    """
+    model_config = ConfigDict(extra="forbid")
+
+    page: int = Field(1, ge=1)
+    page_size: int = Field(25, ge=1, le=10000)
+    search: Optional[str] = Field(
+        None, max_length=64, description="Substring match against card_number"
+    )
+    card_number: Optional[str] = Field(
+        None, max_length=32, description="Exact card_number match"
+    )
+    sort_by: str = Field("transaction_date", max_length=32)
+    sort_dir: str = Field("desc", pattern="^(asc|desc)$")
+    card_type: Optional[str] = Field(None, max_length=32)
+    source: Optional[str] = Field(None, pattern="^(file_upload|manual_entry)$")
+    # Aliased to `status` in the query string — `status` is a Python
+    # builtin so the attribute name uses a trailing underscore.
+    status_: Optional[str] = Field(
+        None, alias="status", pattern="^(success|failed|pending)$"
+    )
+    date_from: Optional[datetime] = Field(
+        None, description="Inclusive start of transaction_date range"
+    )
+    date_to: Optional[datetime] = Field(
+        None, description="Inclusive end of transaction_date range"
+    )
+    amount_min: Optional[Decimal] = Field(
+        None, description="Inclusive lower bound on amount"
+    )
+    amount_max: Optional[Decimal] = Field(
+        None, description="Inclusive upper bound on amount"
+    )
+    include_deleted: bool = Field(False)
+
+
 class TransactionListResponse(BaseModel):
     # Shape of the paginated /transactions response.
     items: List[TransactionOut]
     total: int
     page: int
     page_size: int
+
+
+class BulkCreateResult(BaseModel):
+    # Shape of the /transactions/bulk response. Replaces a loose `dict`
+    # generic so the OpenAPI schema is meaningful and clients get real
+    # types. `rejected_samples` caps at 5 "<card>: <reason>" strings.
+    accepted: int
+    rejected: int
+    rejected_samples: List[str] = []
