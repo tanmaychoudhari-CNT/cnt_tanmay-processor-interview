@@ -13,6 +13,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Iterable
@@ -71,6 +72,26 @@ def looks_like_declared_format(ext: str, head: bytes) -> bool:
     if ext == ".csv":
         return text[0].isprintable()
     return True
+
+
+# Excel saves 15-16 digit card numbers as scientific notation (e.g.
+# "3.58925E+15") when the column isn't formatted as Text. The trailing
+# digits are already lost at that point, but we can at least expand the
+# value back to a digit string of the right length so the row passes
+# length / leader validation and gets ingested.
+_SCIENTIFIC_NOTATION = re.compile(r"^[+-]?\d+(\.\d+)?[eE][+-]?\d+$")
+
+
+def _recover_scientific_card(value):
+    if value is None:
+        return value
+    s = str(value).strip()
+    if not _SCIENTIFIC_NOTATION.match(s):
+        return value
+    try:
+        return str(int(Decimal(s)))
+    except (InvalidOperation, ValueError):
+        return value
 
 
 def _to_decimal(value) -> Decimal:
@@ -164,7 +185,7 @@ def parse_upload(
 
     for raw in rows:
         norm = _normalize_keys(raw)
-        card = norm.get("card_number")
+        card = _recover_scientific_card(norm.get("card_number"))
         amount_raw = norm.get("amount")
         ts_raw = norm.get("timestamp")
 
