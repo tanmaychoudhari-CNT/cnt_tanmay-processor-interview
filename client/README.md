@@ -26,29 +26,27 @@ client/
 ├── tailwind.config.js
 ├── postcss.config.js
 ├── package.json
-└── src/
-    ├── main.jsx                # React entry + router mount
-    ├── App.jsx                 # top-level <Routes>
-    ├── pages/
-    │   ├── Login.jsx           # /login (public-only)
-    │   └── Dashboard.jsx       # /  (protected)
-    ├── routes/
-    │   └── guards.jsx          # <ProtectedRoute> + <PublicOnlyRoute>
-    ├── api/
-    │   ├── api.js              # axios instance + response unwrap
-    │   ├── auth.js             # login, me, logout
-    │   └── transactions.js     # list / create / update / delete / bulk / upload / reports
-    ├── components/
-    │   └── dashboard/          # table, filters, charts, upload dropzone
-    ├── context/
-    │   ├── AuthContext.jsx     # token + user state, persisted to localStorage
-    │   └── ThemeContext.jsx    # light / dark theme toggle
-    ├── hooks/                  # useToast, etc.
-    ├── lib/                    # small pure helpers
-    ├── styles/                 # global CSS + Tailwind layer
-    ├── assets/
-    └── test/
-        └── setup.js            # jest-dom matchers + axios mocks
+├── src/                       # production code (no tests live here)
+│   ├── main.jsx               # React entry + router mount
+│   ├── App.jsx                # top-level <Routes>
+│   ├── pages/                 # Login.jsx, Dashboard.jsx
+│   ├── routes/                # guards.jsx — ProtectedRoute / PublicOnlyRoute
+│   ├── api/                   # axios instance + auth/transactions services
+│   ├── components/dashboard/  # table, filters, charts, upload dropzone
+│   ├── context/               # AuthContext.jsx, ThemeContext.jsx
+│   ├── hooks/                 # useToast, useDebounce
+│   ├── lib/                   # small pure helpers
+│   ├── styles/                # global CSS + Tailwind layer
+│   └── assets/
+└── tests/                     # Vitest specs — mirrors src/ exactly
+    ├── setup.js               # jest-dom matchers, localStorage cleanup, matchMedia stub
+    ├── api/                   # api.test.js, auth.test.js, transactions.test.js
+    ├── components/dashboard/  # one *.test.jsx per dashboard component
+    ├── context/               # AuthContext.test.jsx, ThemeContext.test.jsx
+    ├── hooks/                 # useDebounce.test.js, useToast.test.jsx
+    ├── lib/                   # utils.test.js
+    ├── pages/                 # Dashboard.test.jsx, Login.test.jsx
+    └── routes/                # guards.test.jsx
 ```
 
 ## Prerequisites

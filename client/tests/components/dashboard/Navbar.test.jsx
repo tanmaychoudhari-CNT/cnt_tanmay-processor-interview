@@ -3,17 +3,17 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 const signOut = vi.fn();
-vi.mock("../../context/AuthContext", () => ({
+vi.mock("../../../src/context/AuthContext", () => ({
   useAuth: () => ({ signOut }),
 }));
 
 // ThemeToggle reads from ThemeContext; stub it so we don't need to wrap in
 // a provider here.
-vi.mock("../../context/ThemeContext", () => ({
+vi.mock("../../../src/context/ThemeContext", () => ({
   useTheme: () => ({ theme: "light", isDark: false, toggle: vi.fn() }),
 }));
 
-import Navbar from "./Navbar";
+import Navbar from "../../../src/components/dashboard/Navbar";
 
 describe("Navbar", () => {
   it("shows the passed-in username", () => {

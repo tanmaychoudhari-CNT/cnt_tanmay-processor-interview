@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ToastProvider, useToast } from "./useToast";
+import { ToastProvider, useToast } from "../../src/hooks/useToast";
 
 // Trigger buttons and toast messages use distinct strings so we can assert on
 // the toast text alone without matching the trigger button itself.

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { cn, formatCurrency, formatNumber, maskCard } from "./utils";
+import {
+  cn,
+  formatCurrency,
+  formatNumber,
+  maskCard,
+  maskCardNumber,
+} from "../../src/lib/utils";
 
 describe("cn", () => {
   it("merges class names", () => {
@@ -56,5 +62,25 @@ describe("maskCard", () => {
 
   it("handles null safely", () => {
     expect(maskCard(null)).toBe("");
+  });
+});
+
+describe("maskCardNumber", () => {
+  it("keeps first 2 + last 4, masks the middle", () => {
+    expect(maskCardNumber("4267628872390355")).toBe("42**********0355");
+  });
+
+  it("ignores embedded spaces in the input", () => {
+    expect(maskCardNumber("4267 6288 7239 0355")).toBe("42**********0355");
+  });
+
+  it("returns the value untouched when there are 6 or fewer digits", () => {
+    expect(maskCardNumber("123")).toBe("123");
+    expect(maskCardNumber("123456")).toBe("123456");
+  });
+
+  it("handles null/undefined safely", () => {
+    expect(maskCardNumber(null)).toBe("");
+    expect(maskCardNumber(undefined)).toBe("");
   });
 });

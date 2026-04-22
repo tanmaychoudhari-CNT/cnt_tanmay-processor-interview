@@ -25,7 +25,7 @@ vi.mock("motion/react", () => {
   };
 });
 
-import DetailedSummary from "./DetailedSummary";
+import DetailedSummary from "../../../src/components/dashboard/DetailedSummary";
 
 const stats = {
   totalEntries: 42,

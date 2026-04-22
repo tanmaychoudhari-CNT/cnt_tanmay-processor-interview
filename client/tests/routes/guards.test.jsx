@@ -5,11 +5,11 @@ import { describe, expect, it, vi } from "vitest";
 // We don't want to exercise real auth HTTP here — stub AuthContext.useAuth
 // directly so each test can drive `user` / `loading` deterministically.
 const mockAuth = vi.fn();
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../../src/context/AuthContext", () => ({
   useAuth: () => mockAuth(),
 }));
 
-import { ProtectedRoute, PublicOnlyRoute } from "./guards";
+import { ProtectedRoute, PublicOnlyRoute } from "../../src/routes/guards";
 
 function renderAt(url, element) {
   return render(
@@ -100,5 +100,56 @@ describe("PublicOnlyRoute", () => {
       </MemoryRouter>
     );
     expect(screen.getByText("HOME")).toBeInTheDocument();
+  });
+
+  it("renders a spinner while auth is loading", () => {
+    mockAuth.mockReturnValue({ user: null, loading: true });
+    const { container } = render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <PublicOnlyRoute>
+                <div>LOGIN_FORM</div>
+              </PublicOnlyRoute>
+            }
+          />
+          <Route path="/" element={<div>HOME</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+    expect(screen.queryByText("LOGIN_FORM")).not.toBeInTheDocument();
+    expect(screen.queryByText("HOME")).not.toBeInTheDocument();
+    expect(container.querySelector(".animate-spin")).toBeInTheDocument();
+  });
+
+  it("redirects an already-signed-in user back to the page they originally wanted", () => {
+    // ProtectedRoute records the original location in state.from when it kicks
+    // an unauthenticated user to /login. PublicOnlyRoute reads that on a
+    // subsequent render so the user lands back where they started after
+    // signing in.
+    mockAuth.mockReturnValue({ user: { username: "admin" }, loading: false });
+    render(
+      <MemoryRouter
+        initialEntries={[
+          { pathname: "/login", state: { from: { pathname: "/secret-page" } } },
+        ]}
+      >
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <PublicOnlyRoute>
+                <div>LOGIN_FORM</div>
+              </PublicOnlyRoute>
+            }
+          />
+          <Route path="/" element={<div>HOME</div>} />
+          <Route path="/secret-page" element={<div>SECRET</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+    expect(screen.getByText("SECRET")).toBeInTheDocument();
   });
 });

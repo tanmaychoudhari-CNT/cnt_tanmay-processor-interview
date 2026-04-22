@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 // Mock axios before importing the module under test so `api` picks up the stub.
-vi.mock("./api", () => {
+vi.mock("../../src/api/api", () => {
   const api = {
     get: vi.fn(),
     post: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock("./api", () => {
   };
 });
 
-import { api } from "./api";
+import { api } from "../../src/api/api";
 import {
   bulkCreateTransactions,
   createTransaction,
@@ -28,7 +28,7 @@ import {
   toEntry,
   updateTransaction,
   uploadFile,
-} from "./transactions";
+} from "../../src/api/transactions";
 
 const backendRow = {
   id: "e3f44059-2142-4a5e-a593-5b90c46f8635",
@@ -141,6 +141,40 @@ describe("service methods hit the right endpoint + params", () => {
     api.put.mockResolvedValueOnce({ data: { data: backendRow } });
     await updateTransaction("abc", { amount: 99.99 });
     expect(api.put).toHaveBeenCalledWith("/transactions/abc", { amount: 99.99 });
+  });
+
+  it("updateTransaction maps cardNumber, status and remarks to snake_case", async () => {
+    api.put.mockResolvedValueOnce({ data: { data: backendRow } });
+    await updateTransaction("abc", {
+      cardNumber: "5553959204036891",
+      status: "failed",
+      remarks: "chargeback",
+    });
+    expect(api.put).toHaveBeenCalledWith("/transactions/abc", {
+      card_number: "5553959204036891",
+      status: "failed",
+      remarks: "chargeback",
+    });
+  });
+
+  it("updateTransaction sends null for an explicitly-cleared timestamp", async () => {
+    api.put.mockResolvedValueOnce({ data: { data: backendRow } });
+    await updateTransaction("abc", { timestamp: null });
+    expect(api.put.mock.calls[0][1]).toEqual({ transaction_date: null });
+  });
+
+  it("createTransaction defaults remarks to null and timestamp to null when omitted", async () => {
+    api.post.mockResolvedValueOnce({ data: { data: backendRow } });
+    await createTransaction({
+      cardNumber: "4267628872390355",
+      amount: 50,
+    });
+    expect(api.post).toHaveBeenCalledWith("/transactions", {
+      card_number: "4267628872390355",
+      amount: 50,
+      remarks: null,
+      transaction_date: null,
+    });
   });
 
   it("updateTransaction normalizes timestamp to ISO", async () => {

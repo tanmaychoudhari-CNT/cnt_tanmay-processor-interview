@@ -25,15 +25,15 @@ vi.mock("motion/react", () => {
 });
 
 const signIn = vi.fn();
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../../src/context/AuthContext", () => ({
   useAuth: () => ({ signIn }),
 }));
 
-vi.mock("../api/api", () => ({
+vi.mock("../../src/api/api", () => ({
   errorMessage: (e) => e?.message ?? "err",
 }));
 
-import Login from "./Login";
+import Login from "../../src/pages/Login";
 
 describe("Login page", () => {
   it("renders the form with the default credentials prefilled", () => {
@@ -58,6 +58,24 @@ describe("Login page", () => {
     await waitFor(() =>
       expect(screen.getByText("Invalid credentials")).toBeInTheDocument()
     );
+  });
+
+  it("falls back to a generic 'Invalid username or password' when errorMessage returns falsy", async () => {
+    signIn.mockClear();
+    // errorMessage(undefined) (mocked above) returns "err". We want the OR
+    // branch to fire instead — push a rejection whose message is the empty
+    // string, then re-mock errorMessage to return "" so the OR fallback
+    // takes over.
+    signIn.mockRejectedValueOnce(new Error(""));
+    const apiMod = await import("../../src/api/api");
+    const orig = apiMod.errorMessage;
+    apiMod.errorMessage = () => "";
+    render(<Login />);
+    await userEvent.click(screen.getByRole("button", { name: /log in/i }));
+    await waitFor(() =>
+      expect(screen.getByText(/invalid username or password/i)).toBeInTheDocument()
+    );
+    apiMod.errorMessage = orig;
   });
 
   it("toggles the password visibility", async () => {

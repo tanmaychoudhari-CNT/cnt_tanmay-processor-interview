@@ -25,13 +25,13 @@ vi.mock("motion/react", () => {
 });
 
 const toast = { success: vi.fn(), error: vi.fn(), info: vi.fn() };
-vi.mock("../../hooks/useToast", () => ({ useToast: () => toast }));
+vi.mock("../../../src/hooks/useToast", () => ({ useToast: () => toast }));
 
-vi.mock("../../api/api", () => ({
+vi.mock("../../../src/api/api", () => ({
   errorMessage: (e) => e?.message ?? "err",
 }));
 
-vi.mock("../../api/transactions", () => ({
+vi.mock("../../../src/api/transactions", () => ({
   bulkCreateTransactions: vi.fn(),
   uploadFile: vi.fn(),
 }));
@@ -39,14 +39,14 @@ vi.mock("../../api/transactions", () => ({
 import {
   bulkCreateTransactions,
   uploadFile,
-} from "../../api/transactions";
+} from "../../../src/api/transactions";
 import DataInput, {
   formatCardNumber,
   maxDigitsFor,
   validateAmount,
   validateCard,
   validateTimestamp,
-} from "./DataInput";
+} from "../../../src/components/dashboard/DataInput";
 
 describe("DataInput helpers", () => {
   it("formatCardNumber: 16 digits → 4-4-4-4", () => {
@@ -222,4 +222,143 @@ describe("DataInput — File Import", () => {
       expect.stringMatching(/x\.csv.*accepted/)
     );
   });
+
+  it("toasts the error message when uploadFile rejects", async () => {
+    uploadFile.mockRejectedValueOnce(new Error("server boom"));
+    render(<DataInput onDataChanged={() => {}} />);
+    const input = document.querySelector('input[type="file"]');
+    const good = new File(["x"], "x.csv", { type: "text/csv" });
+    fireEvent.change(input, { target: { files: [good] } });
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("server boom"));
+  });
+
+  it("ignores a file-picker change that has no files (early return)", () => {
+    render(<DataInput onDataChanged={() => {}} />);
+    const input = document.querySelector('input[type="file"]');
+    fireEvent.change(input, { target: { files: [] } });
+    expect(uploadFile).not.toHaveBeenCalled();
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("dragging a valid file over the dropzone toggles the drag class and accepts the drop", async () => {
+    uploadFile.mockResolvedValueOnce({
+      filename: "drop.csv",
+      accepted: 1,
+      rejected: 0,
+    });
+    render(<DataInput onDataChanged={() => {}} />);
+    const dropzone = document
+      .querySelector('input[type="file"]')
+      .closest("div");
+
+    fireEvent.dragEnter(dropzone, { dataTransfer: { files: [] } });
+    fireEvent.dragOver(dropzone, { dataTransfer: { files: [] } });
+    fireEvent.dragLeave(dropzone);
+
+    const file = new File(["a,b"], "drop.csv", { type: "text/csv" });
+    fireEvent.drop(dropzone, { dataTransfer: { files: [file] } });
+
+    await waitFor(() => expect(uploadFile).toHaveBeenCalledTimes(1));
+  });
+
+  it("a drop event without files is a no-op", () => {
+    render(<DataInput onDataChanged={() => {}} />);
+    const dropzone = document
+      .querySelector('input[type="file"]')
+      .closest("div");
+    fireEvent.drop(dropzone, { dataTransfer: { files: [] } });
+    expect(uploadFile).not.toHaveBeenCalled();
+  });
+});
+
+describe("DataInput — Manual Entry edge cases", () => {
+  beforeEach(() => {
+    toast.success.mockReset();
+    toast.error.mockReset();
+    bulkCreateTransactions.mockReset();
+  });
+
+  it("Clear all wipes the rows back to a single empty row", async () => {
+    const user = userEvent.setup();
+    render(<DataInput onDataChanged={() => {}} />);
+    await user.click(screen.getByText(/manual entry/i));
+
+    fireEvent.change(screen.getByPlaceholderText(/1234 5678/), {
+      target: { value: "4267628872390355" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("0.00"), {
+      target: { value: "12.34" },
+    });
+
+    await user.click(screen.getByText(/clear all/i));
+
+    const inputs = screen.getAllByPlaceholderText(/1234 5678/);
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0].value).toBe("");
+  });
+
+  it("removing the last remaining row resets it to empty instead of dropping below one", async () => {
+    const user = userEvent.setup();
+    render(<DataInput onDataChanged={() => {}} />);
+    await user.click(screen.getByText(/manual entry/i));
+
+    fireEvent.change(screen.getByPlaceholderText(/1234 5678/), {
+      target: { value: "4267628872390355" },
+    });
+    expect(screen.getByPlaceholderText(/1234 5678/).value).toContain("4267");
+
+    await user.click(screen.getByLabelText(/remove row/i));
+    const remaining = screen.getAllByPlaceholderText(/1234 5678/);
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].value).toBe("");
+  });
+
+  it("typing an Amex card caps the input at 15 digits via the controlled onChange", async () => {
+    const user = userEvent.setup();
+    render(<DataInput onDataChanged={() => {}} />);
+    await user.click(screen.getByText(/manual entry/i));
+
+    const input = screen.getByPlaceholderText(/1234 5678/);
+    fireEvent.change(input, { target: { value: "37144963539843199999" } });
+    // React reconciles the controlled value asynchronously; re-query and wait.
+    await waitFor(() => {
+      const refreshed = screen.getByPlaceholderText(/1234 5678/);
+      expect(refreshed.value.replace(/\s/g, "")).toBe("371449635398431");
+    });
+  });
+
+  it("toasts the bulk-create rejection and leaves the rows intact", async () => {
+    const user = userEvent.setup();
+    bulkCreateTransactions.mockRejectedValueOnce(new Error("backend angry"));
+    render(<DataInput onDataChanged={() => {}} />);
+    await user.click(screen.getByText(/manual entry/i));
+
+    fireEvent.change(screen.getByPlaceholderText(/1234 5678/), {
+      target: { value: "4267628872390355" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("0.00"), {
+      target: { value: "1" },
+    });
+    await user.click(screen.getByText(/add all/i));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("backend angry"));
+  });
+
+  it("captures a typed timestamp on the row", async () => {
+    const user = userEvent.setup();
+    render(<DataInput onDataChanged={() => {}} />);
+    await user.click(screen.getByText(/manual entry/i));
+
+    const ts = document.querySelector('input[type="datetime-local"]');
+    fireEvent.change(ts, { target: { value: "2024-06-01T10:00" } });
+    expect(ts.value).toBe("2024-06-01T10:00");
+  });
+
+  // NOTE: submitManual's hasErrors re-validation guard (lines 186-190 in
+  // DataInput.jsx) is a belt-and-braces check behind a disabled button. React
+  // 18 swallows click events on buttons rendered with disabled=true even when
+  // the DOM attribute is removed imperatively, so this path cannot be reached
+  // through the public UI. The invariants are covered indirectly: the submit
+  // button disable condition is tested by "disables the submit button when
+  // rows are empty or invalid", and the underlying validateCard / validateAmount
+  // / validateTimestamp helpers have direct unit tests above.
 });

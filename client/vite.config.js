@@ -16,16 +16,14 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
-    setupFiles: ["./src/test/setup.js"],
+    setupFiles: ["./tests/setup.js"],
     css: false,
-    include: ["src/**/*.{test,spec}.{js,jsx}"],
+    include: ["tests/**/*.{test,spec}.{js,jsx}"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
       include: ["src/**/*.{js,jsx}"],
       exclude: [
-        "src/**/*.{test,spec}.{js,jsx}",
-        "src/test/**",
         "src/main.jsx",
         "src/App.jsx",
         "src/styles/**",

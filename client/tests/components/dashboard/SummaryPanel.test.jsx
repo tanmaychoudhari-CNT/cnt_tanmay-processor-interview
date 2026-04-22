@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import SummaryPanel from "./SummaryPanel";
+import SummaryPanel from "../../../src/components/dashboard/SummaryPanel";
 
 const stats = {
   totalEntries: 1234,

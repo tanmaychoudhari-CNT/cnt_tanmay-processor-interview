@@ -24,7 +24,7 @@ vi.mock("motion/react", () => {
   };
 });
 
-import EditTransactionModal from "./EditTransactionModal";
+import EditTransactionModal from "../../../src/components/dashboard/EditTransactionModal";
 
 const entry = {
   id: "tx-1",
@@ -90,6 +90,43 @@ describe("EditTransactionModal", () => {
       )
     );
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("rejects a NaN amount with an inline error and never calls onSubmit", async () => {
+    // The input is type=number, so JSDOM strips non-numeric typed values to "".
+    // To actually exercise the NaN guard, seed the entry with amount=NaN —
+    // the effect below initializes the state with String(NaN) = "NaN", which
+    // round-trips through Number() back to NaN on submit.
+    const onSubmit = vi.fn();
+    render(
+      <EditTransactionModal
+        open
+        entry={{ ...entry, amount: NaN }}
+        onClose={() => {}}
+        onSubmit={onSubmit}
+      />
+    );
+    await userEvent.click(screen.getByText(/save changes/i));
+    await waitFor(() =>
+      expect(screen.getByText(/amount must be a number/i)).toBeInTheDocument()
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("falls back to a generic error message when the rejection has no detail or message", async () => {
+    const onSubmit = vi.fn().mockRejectedValue({});
+    render(
+      <EditTransactionModal
+        open
+        entry={entry}
+        onClose={() => {}}
+        onSubmit={onSubmit}
+      />
+    );
+    await userEvent.click(screen.getByText(/save changes/i));
+    await waitFor(() =>
+      expect(screen.getByText(/failed to save/i)).toBeInTheDocument()
+    );
   });
 
   it("shows an error when onSubmit rejects and does NOT auto-close", async () => {

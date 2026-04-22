@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import CardBrandLogo from "./CardBrandLogo";
+import CardBrandLogo from "../../../src/components/dashboard/CardBrandLogo";
 
 describe("CardBrandLogo", () => {
   it("renders a Visa mark with the VISA text", () => {

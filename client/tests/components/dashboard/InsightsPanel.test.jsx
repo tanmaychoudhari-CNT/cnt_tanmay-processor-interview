@@ -23,7 +23,7 @@ vi.mock("motion/react", () => {
   };
 });
 
-import InsightsPanel from "./InsightsPanel";
+import InsightsPanel from "../../../src/components/dashboard/InsightsPanel";
 
 const entry = (over = {}) => ({
   id: `id-${Math.random()}`,
@@ -56,6 +56,34 @@ describe("InsightsPanel", () => {
     // Top card is the $500 MasterCard.
     const first = screen.getAllByText(/\$\d/)[0];
     expect(first.textContent).toMatch(/\$500\.00/);
+  });
+
+  it("uses the server-side byCard aggregate when provided (top 5)", () => {
+    render(
+      <InsightsPanel
+        entries={[]}
+        byCard={[
+          { card_number: "4111111111111111", card_type: "Visa", count: 5, total_amount: "1234.50" },
+          { card_number: "5555555555554444", card_type: "MasterCard", count: 2, total_amount: "-50" },
+        ]}
+      />
+    );
+    expect(screen.getByText("Top cards by volume")).toBeInTheDocument();
+    expect(screen.getByText(/\$1,234\.50/)).toBeInTheDocument();
+    // total_amount is normalized via Math.abs, so the negative card shows |50|.
+    expect(screen.getByText(/\$50\.00/)).toBeInTheDocument();
+  });
+
+  it("byCard with null total_amount falls back to 0 instead of NaN", () => {
+    render(
+      <InsightsPanel
+        entries={[]}
+        byCard={[
+          { card_number: "4111111111111111", card_type: "Visa", count: 1, total_amount: null },
+        ]}
+      />
+    );
+    expect(screen.getByText("$0.00")).toBeInTheDocument();
   });
 
   it("computes the upload vs manual source split", () => {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./api", () => {
+vi.mock("../../src/api/api", () => {
   const api = {
     post: vi.fn(),
     get: vi.fn(),
@@ -11,8 +11,8 @@ vi.mock("./api", () => {
   };
 });
 
-import { api } from "./api";
-import { login, logout, me } from "./auth";
+import { api } from "../../src/api/api";
+import { login, logout, me } from "../../src/api/auth";
 
 describe("auth service", () => {
   beforeEach(() => {
