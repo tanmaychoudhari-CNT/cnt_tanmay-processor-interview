@@ -4,12 +4,12 @@
 
 import React from "react";
 import { motion } from "motion/react";
-import { Users, DollarSign, TrendingUp, ArrowUpRight } from "lucide-react";
+import { Receipt, DollarSign, TrendingUp, ArrowUpRight } from "lucide-react";
 import { cn, formatCurrency, formatNumber } from "../../lib/utils";
 
 export default function SummaryPanel({ stats }) {
   const cards = [
-    { label: "Total Entries", value: formatNumber(stats.totalEntries), icon: Users, color: "bg-black" },
+    { label: "Total Entries", value: formatNumber(stats.totalEntries), icon: Receipt, color: "bg-black" },
     { label: "Total Amount", value: formatCurrency(stats.totalAmount), icon: DollarSign, color: "bg-accent" },
     { label: "Average Value", value: formatCurrency(stats.averageAmount), icon: TrendingUp, color: "bg-black" },
     { label: "Highest Txn", value: formatCurrency(stats.highestAmount ?? 0), icon: ArrowUpRight, color: "bg-accent" },
