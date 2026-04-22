@@ -24,15 +24,29 @@ const BRAND_COLORS = {
   Unknown: "#9CA3AF",
 };
 
-export default function ChartsPanel({ entries }) {
+export default function ChartsPanel({ entries, byCardType = [], byDay = [] }) {
+  // Trend: prefer the server's /reports/by-day aggregation (full dataset).
+  // Fall back to deriving from entries only if reports haven't loaded yet.
   const trendData = useMemo(() => {
-    const byDay = new Map();
+    if (byDay.length) {
+      return byDay
+        .slice()
+        .sort((a, b) => String(a.day).localeCompare(String(b.day)))
+        .map((d) => ({
+          time: new Date(d.day).toLocaleDateString("en-US", {
+            month: "short",
+            day: "2-digit",
+          }),
+          amount: Number(d.total_amount ?? 0),
+        }));
+    }
+    const map = new Map();
     for (const e of entries) {
       const d = new Date(e.timestamp);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      byDay.set(key, (byDay.get(key) || 0) + Number(e.amount));
+      map.set(key, (map.get(key) || 0) + Number(e.amount));
     }
-    return Array.from(byDay.entries())
+    return Array.from(map.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([day, total]) => ({
         time: new Date(day).toLocaleDateString("en-US", {
@@ -41,7 +55,7 @@ export default function ChartsPanel({ entries }) {
         }),
         amount: Number(total.toFixed(2)),
       }));
-  }, [entries]);
+  }, [entries, byDay]);
 
   const amountRanges = useMemo(() => {
     // Finer-grained buckets so the shape of the distribution is visible rather
@@ -86,8 +100,15 @@ export default function ChartsPanel({ entries }) {
     };
   }, [amountRanges]);
 
-  // Brand mix — pie-chart data. Only brands that actually appear.
+  // Brand mix — use the server's /reports/by-card-type aggregation so the
+  // chart reflects the ENTIRE dataset, not just the 10k-row entries window.
+  // Fall back to deriving from entries only while the report is in flight.
   const brandData = useMemo(() => {
+    if (byCardType.length) {
+      return byCardType
+        .map((b) => ({ name: b.card_type || "Unknown", value: b.count }))
+        .sort((a, b) => b.value - a.value);
+    }
     const counts = {};
     for (const e of entries) {
       const key = e.cardType || "Unknown";
@@ -96,7 +117,7 @@ export default function ChartsPanel({ entries }) {
     return Object.entries(counts)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [entries]);
+  }, [entries, byCardType]);
 
   const totalBrandCount = brandData.reduce((s, b) => s + b.value, 0);
 

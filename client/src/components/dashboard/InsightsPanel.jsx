@@ -5,10 +5,20 @@ import CardBrandLogo from "./CardBrandLogo";
 import { formatCurrency, formatNumber, maskCardNumber } from "../../lib/utils";
 
 // Two side-by-side insight cards that summarize the loaded dataset from a
-// different angle than the big KPIs. Everything is derived from `entries` —
-// no extra API calls.
-export default function InsightsPanel({ entries }) {
+// different angle than the big KPIs. Top-cards ranking comes from the
+// server's /reports/by-card aggregation (full dataset); source-split is
+// derived from `entries` (capped at 10k by the list endpoint — acceptable
+// since the server doesn't expose a source-breakdown endpoint yet).
+export default function InsightsPanel({ entries, byCard = [] }) {
   const topCards = useMemo(() => {
+    if (byCard.length) {
+      return byCard.slice(0, 5).map((c) => ({
+        cardNumber: c.card_number,
+        cardType: c.card_type,
+        total: Math.abs(Number(c.total_amount ?? 0)),
+        count: c.count,
+      }));
+    }
     const acc = new Map();
     for (const e of entries) {
       const key = e.cardNumber;
@@ -26,7 +36,7 @@ export default function InsightsPanel({ entries }) {
     return Array.from(acc.values())
       .sort((a, b) => b.total - a.total)
       .slice(0, 5);
-  }, [entries]);
+  }, [entries, byCard]);
 
   const sourceSplit = useMemo(() => {
     let upload = 0;

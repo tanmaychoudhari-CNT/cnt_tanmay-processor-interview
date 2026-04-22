@@ -137,13 +137,16 @@ describe("DataInput — Manual Entry", () => {
     ).toBeInTheDocument();
   });
 
-  it("blocks submit and toasts when a row is invalid", async () => {
+  it("disables the submit button when rows are empty or invalid", async () => {
     const user = userEvent.setup();
     render(<DataInput onDataChanged={() => {}} />);
     await switchToManual(user);
 
-    await user.click(screen.getByText(/add all/i));
-    expect(toast.error).toHaveBeenCalled();
+    // With nothing entered, the Add all CTA is disabled — clicking it is a
+    // no-op and no API call is fired.
+    const submit = screen.getByText(/add all/i).closest("button");
+    expect(submit).toBeDisabled();
+    await user.click(submit);
     expect(bulkCreateTransactions).not.toHaveBeenCalled();
   });
 

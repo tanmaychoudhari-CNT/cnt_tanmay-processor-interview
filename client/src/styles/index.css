@@ -103,6 +103,45 @@ body {
   fill: currentColor;
 }
 
+/* ─── Dark-mode overrides for the calendar popover ─────────────────────
+   Tailwind's class-mode dark flag lives on <html class="dark">, so every
+   rule below re-targets the same element with a `.dark` ancestor. */
+.dark .rdp-theme .rdp-root {
+  /* Keep the accent color and tint, but pick up dark text fallbacks. */
+  --rdp-accent-background-color: rgba(0, 160, 221, 0.18);
+  --rdp-weekday-text-color: #6b7280;
+}
+.dark .rdp-theme .rdp-caption_label,
+.dark .rdp-theme .rdp-month_caption {
+  color: #f3f4f6;
+}
+.dark .rdp-theme .rdp-day_button {
+  color: #d1d5db;
+}
+.dark .rdp-theme .rdp-day_button:hover:not([disabled]) {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+.dark .rdp-theme .rdp-day_outside .rdp-day_button,
+.dark .rdp-theme .rdp-day_disabled .rdp-day_button {
+  color: #4b5563;
+}
+/* Range middle: slightly brighter on dark so the band stays visible */
+.dark .rdp-theme .rdp-range_middle .rdp-day_button {
+  background-color: rgba(0, 160, 221, 0.18);
+  color: #e5e7eb;
+}
+.dark .rdp-theme .rdp-today .rdp-day_button {
+  outline-color: rgba(0, 160, 221, 0.55);
+  color: #7dd3fc;
+}
+.dark .rdp-theme .rdp-nav button {
+  color: #9ca3af;
+}
+.dark .rdp-theme .rdp-nav button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f3f4f6;
+}
+
 .fade-in {
   animation: fade-in 200ms ease-out both;
 }

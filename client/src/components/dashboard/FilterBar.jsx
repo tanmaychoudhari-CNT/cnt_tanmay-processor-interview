@@ -44,10 +44,19 @@ export default function FilterBar({ filters, onChange, onClear, isDirty }) {
           <select
             value={filters.cardType}
             onChange={(e) => set({ cardType: e.target.value })}
-            className="bg-transparent border-none outline-none text-sm font-normal text-gray-800 dark:text-gray-100 pr-2 cursor-pointer"
+            // `color-scheme` tells the browser to render the native option
+            // popup in the matching theme — without it, Chromium shows a
+            // white popup in dark mode and the options are unreadable.
+            className="bg-transparent border-none outline-none text-sm font-normal text-gray-800 dark:text-gray-100 pr-2 cursor-pointer [color-scheme:light] dark:[color-scheme:dark]"
           >
             {CARD_TYPES.map((t) => (
-              <option key={t.value || "all"} value={t.value}>
+              <option
+                key={t.value || "all"}
+                value={t.value}
+                // Firefox honors these inline styles on <option>; Chromium
+                // uses them as a fallback if color-scheme isn't applied.
+                className="bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100"
+              >
                 {t.label}
               </option>
             ))}

@@ -108,3 +108,14 @@ export const uploadFile = (file, onProgress) => {
 };
 
 export const getSummary = () => unwrap(api.get("/reports/summary"));
+
+// Full-dataset aggregates. Use these for dashboard charts instead of
+// deriving from the capped /transactions list — they reflect every row,
+// scoped to the current user, excluding soft-deleted.
+export const getByCardType = () => unwrap(api.get("/reports/by-card-type"));
+
+export const getByDay = (limit = 90) =>
+  unwrap(api.get("/reports/by-day", { params: { limit } }));
+
+export const getByCard = (limit = 10) =>
+  unwrap(api.get("/reports/by-card", { params: { limit } }));

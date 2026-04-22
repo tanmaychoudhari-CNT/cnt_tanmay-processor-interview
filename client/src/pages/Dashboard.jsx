@@ -12,10 +12,17 @@ import { useToast } from "../hooks/useToast";
 import { errorMessage } from "../services/api";
 import {
   deleteTransaction,
+  getByCard,
+  getByCardType,
+  getByDay,
   getSummary,
   listAllTransactions,
   updateTransaction,
 } from "../services/transactions";
+
+// Auto-refresh cadence for live charts. Keeps the dashboard honest without
+// hammering the backend — one set of aggregated reports every 15s.
+const REFRESH_MS = 15_000;
 
 const initialStats = {
   totalEntries: 0,
@@ -54,14 +61,26 @@ export default function Dashboard() {
   const toast = useToast();
   const [entries, setEntries] = useState([]);
   const [stats, setStats] = useState(initialStats);
+  // Server-aggregated report data — source of truth for charts.
+  const [reports, setReports] = useState({
+    byCardType: [],
+    byDay: [],
+    byCard: [],
+  });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Full reload — entries + summary + aggregated reports.
   const loadData = useCallback(async () => {
-    setLoading(true);
     try {
-      const [{ items }, s] = await Promise.all([listAllTransactions(), getSummary()]);
+      const [{ items }, s, byCardType, byDay, byCard] = await Promise.all([
+        listAllTransactions(),
+        getSummary(),
+        getByCardType(),
+        getByDay(90),
+        getByCard(10),
+      ]);
       setEntries(items);
       const derived = deriveEntryStats(items);
       setStats({
@@ -73,12 +92,39 @@ export default function Dashboard() {
         deletedCount: s.deleted_count ?? 0,
         ...derived,
       });
+      setReports({ byCardType, byDay, byCard });
     } catch (err) {
       toast.error(errorMessage(err));
     } finally {
       setLoading(false);
     }
   }, [toast]);
+
+  // Lightweight refresh — only the aggregated reports + summary. Runs on a
+  // timer so charts stay live between user-driven refreshes, and doesn't
+  // pay for the full entries download on every tick.
+  const refreshReports = useCallback(async () => {
+    try {
+      const [s, byCardType, byDay, byCard] = await Promise.all([
+        getSummary(),
+        getByCardType(),
+        getByDay(90),
+        getByCard(10),
+      ]);
+      setStats((prev) => ({
+        ...prev,
+        totalEntries: s.total_entries,
+        totalAmount: Number(s.total_amount),
+        averageAmount: Number(s.average_amount),
+        highestAmount: Number(s.highest_amount),
+        lowestAmount: Number(s.lowest_amount),
+        deletedCount: s.deleted_count ?? 0,
+      }));
+      setReports({ byCardType, byDay, byCard });
+    } catch {
+      /* silent — background tick; a failure toast would be noisy */
+    }
+  }, []);
 
   // Refresh everything (summary, charts, data grid).
   const refreshAll = useCallback(() => {
@@ -89,6 +135,12 @@ export default function Dashboard() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Polling loop — keeps charts reflecting the live DB without user action.
+  useEffect(() => {
+    const id = setInterval(refreshReports, REFRESH_MS);
+    return () => clearInterval(id);
+  }, [refreshReports]);
 
   const handleDelete = async (id) => {
     try {
@@ -158,8 +210,16 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-10 space-y-8">
-          <ChartsPanel entries={entries} />
-          <InsightsPanel entries={entries} />
+          <ChartsPanel
+            entries={entries}
+            byCardType={reports.byCardType}
+            byDay={reports.byDay}
+          />
+          <InsightsPanel
+            entries={entries}
+            byCard={reports.byCard}
+            stats={stats}
+          />
           <DataGrid
             onDelete={handleDelete}
             onEdit={handleEdit}
