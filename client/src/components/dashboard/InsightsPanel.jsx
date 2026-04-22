@@ -48,13 +48,13 @@ export default function InsightsPanel({ entries }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       {/* Top cards by total spend */}
-      <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-base font-semibold tracking-tight text-gray-900">
+            <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-gray-50">
               Top cards by volume
             </h3>
-            <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wider mt-1">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mt-1">
               Biggest absolute spenders
             </p>
           </div>
@@ -72,19 +72,19 @@ export default function InsightsPanel({ entries }) {
                 transition={{ delay: i * 0.05, duration: 0.25 }}
                 className="flex items-center gap-3 py-2"
               >
-                <span className="w-6 h-6 rounded-full bg-gray-50 text-gray-500 text-[11px] font-medium flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[11px] font-medium flex items-center justify-center">
                   {i + 1}
                 </span>
                 <CardBrandLogo type={c.cardType} />
                 <div className="min-w-0 flex-1">
-                  <p className="font-mono text-sm text-gray-800 truncate">
+                  <p className="font-mono text-sm text-gray-800 dark:text-gray-100 truncate">
                     {maskCardNumber(c.cardNumber)}
                   </p>
-                  <p className="text-[11px] text-gray-400 font-normal mt-0.5">
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500 font-normal mt-0.5">
                     {formatNumber(c.count)} transactions
                   </p>
                 </div>
-                <span className="text-sm font-semibold tracking-tight tabular-nums text-gray-900">
+                <span className="text-sm font-semibold tracking-tight tabular-nums text-gray-900 dark:text-gray-50">
                   {formatCurrency(c.total)}
                 </span>
               </motion.li>
@@ -94,17 +94,17 @@ export default function InsightsPanel({ entries }) {
       </div>
 
       {/* Source breakdown: how data arrived (file upload vs manual entry) */}
-      <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-base font-semibold tracking-tight text-gray-900">
+            <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-gray-50">
               Processing source
             </h3>
-            <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wider mt-1">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mt-1">
               Upload vs manual entry
             </p>
           </div>
-          <span className="text-[11px] font-medium text-gray-400 tabular-nums">
+          <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 tabular-nums">
             {formatNumber(sourceSplit.total)} total
           </span>
         </div>
@@ -131,7 +131,7 @@ export default function InsightsPanel({ entries }) {
             />
 
             {/* Combined stacked bar for a quick visual ratio. */}
-            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden flex">
+            <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden flex">
               <div
                 className="h-full bg-sky-500"
                 style={{ width: `${sourceSplit.uploadPct}%` }}
@@ -158,14 +158,14 @@ function SourceRow({ icon: Icon, label, count, pct, colorClass, badgeClass }) {
           >
             <Icon className="w-3.5 h-3.5" />
           </span>
-          <span className="text-sm font-medium text-gray-800">{label}</span>
+          <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{label}</span>
         </div>
-        <span className="text-[13px] font-medium tabular-nums text-gray-600">
+        <span className="text-[13px] font-medium tabular-nums text-gray-600 dark:text-gray-300">
           {formatNumber(count)}{" "}
-          <span className="text-gray-400 font-normal">· {pct}%</span>
+          <span className="text-gray-400 dark:text-gray-500 font-normal">· {pct}%</span>
         </span>
       </div>
-      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
         <div
           className={`h-full ${colorClass} transition-all`}
           style={{ width: `${pct}%` }}
@@ -177,7 +177,7 @@ function SourceRow({ icon: Icon, label, count, pct, colorClass, badgeClass }) {
 
 function EmptyState({ label }) {
   return (
-    <div className="flex items-center justify-center h-32 text-sm text-gray-400 font-normal">
+    <div className="flex items-center justify-center h-32 text-sm text-gray-400 dark:text-gray-500 font-normal">
       {label}
     </div>
   );

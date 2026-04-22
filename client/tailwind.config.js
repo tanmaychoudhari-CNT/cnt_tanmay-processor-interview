@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
+  // Class-based dark mode: toggled by adding `class="dark"` on <html>.
+  // The ThemeContext handles the toggle + localStorage persistence.
+  darkMode: "class",
   theme: {
     extend: {
       colors: {

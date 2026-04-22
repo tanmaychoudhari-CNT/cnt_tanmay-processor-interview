@@ -28,10 +28,10 @@ export function ToastProvider({ children }) {
             key={t.id}
             className={`fade-in rounded-xl border px-4 py-3 text-sm font-normal shadow-premium ${
               t.type === "success"
-                ? "bg-emerald-50 border-emerald-100 text-emerald-800"
+                ? "bg-emerald-50 border-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-900 dark:text-emerald-200"
                 : t.type === "error"
-                ? "bg-red-50 border-red-100 text-red-800"
-                : "bg-sky-50 border-sky-100 text-sky-800"
+                ? "bg-red-50 border-red-100 text-red-800 dark:bg-red-950/50 dark:border-red-900 dark:text-red-200"
+                : "bg-sky-50 border-sky-100 text-sky-800 dark:bg-sky-950/50 dark:border-sky-900 dark:text-sky-200"
             }`}
           >
             {t.message}

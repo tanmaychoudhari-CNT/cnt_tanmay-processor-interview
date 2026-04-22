@@ -73,9 +73,9 @@ export default function DetailedSummary({ stats }) {
   ];
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 space-y-6 h-full">
+    <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 space-y-6 h-full transition-colors">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold tracking-tight text-gray-900">Summary</h3>
+        <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-gray-50">Summary</h3>
         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
       </div>
 
@@ -100,12 +100,12 @@ export default function DetailedSummary({ stats }) {
                 >
                   <item.icon className="w-4 h-4" />
                 </div>
-                <span className="text-sm font-normal text-gray-600">{item.label}</span>
+                <span className="text-sm font-normal text-gray-600 dark:text-gray-300">{item.label}</span>
               </div>
               <span
                 className={cn(
                   "text-sm font-medium tracking-tight tabular-nums",
-                  negative ? "text-rose-600" : "text-gray-900"
+                  negative ? "text-rose-500" : "text-gray-900 dark:text-gray-50"
                 )}
               >
                 {item.value}

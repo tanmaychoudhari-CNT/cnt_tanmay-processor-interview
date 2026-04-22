@@ -19,15 +19,15 @@ export default function SummaryPanel({ stats }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.08, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-50 group hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300"
+          className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-50 dark:border-gray-800 group hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-black/40 transition-all duration-300"
         >
           <div className="flex items-start mb-4">
             <div className={cn("p-3 rounded-xl text-white shadow-lg", card.color)}>
               <card.icon className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-gray-500 text-sm font-normal">{card.label}</p>
-          <h3 className="text-2xl font-semibold mt-1 tracking-tight text-gray-900">{card.value}</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-normal">{card.label}</p>
+          <h3 className="text-2xl font-semibold mt-1 tracking-tight text-gray-900 dark:text-gray-50">{card.value}</h3>
         </motion.div>
       ))}
     </div>

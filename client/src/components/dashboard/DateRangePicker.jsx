@@ -84,17 +84,17 @@ export default function DateRangePicker({ from, to, onChange }) {
         onClick={() => setOpen((v) => !v)}
         className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-normal transition-all outline-none ${
           open
-            ? "bg-white border border-accent ring-2 ring-accent/10"
-            : "bg-gray-50 border border-transparent hover:border-gray-200"
+            ? "bg-white dark:bg-gray-900 border border-accent ring-2 ring-accent/10"
+            : "bg-gray-50 dark:bg-gray-800 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
         }`}
       >
-        <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-        <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400 shrink-0">
+        <Calendar className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 shrink-0" />
+        <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 shrink-0">
           Date
         </span>
         <span
           className={`${
-            hasRange ? "text-gray-800" : "text-gray-400"
+            hasRange ? "text-gray-800 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"
           } tabular-nums`}
         >
           {triggerLabel}
@@ -105,7 +105,7 @@ export default function DateRangePicker({ from, to, onChange }) {
             tabIndex={0}
             onClick={clearAll}
             onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && clearAll(e)}
-            className="ml-1 p-0.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all"
+            className="ml-1 p-0.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all"
             aria-label="clear date range"
           >
             <X className="w-3.5 h-3.5" />
@@ -123,18 +123,18 @@ export default function DateRangePicker({ from, to, onChange }) {
             transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
             className="absolute left-0 top-[calc(100%+8px)] z-40 rdp-theme"
           >
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-premium p-1 overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-premium p-1 overflow-hidden">
               {/* Header: show current draft range */}
-              <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-100">
+              <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                 <div className="flex items-center gap-2">
                   <DateChip value={draft?.from} placeholder="Start" />
-                  <ChevronRight className="w-4 h-4 text-gray-300" />
+                  <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
                   <DateChip value={draft?.to} placeholder="End" />
                 </div>
                 <button
                   type="button"
                   onClick={() => setDraft({ from: undefined, to: undefined })}
-                  className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
+                  className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
                   aria-label="reset"
                   disabled={!draft?.from && !draft?.to}
                 >
@@ -152,11 +152,11 @@ export default function DateRangePicker({ from, to, onChange }) {
                 weekStartsOn={1}
               />
 
-              <div className="flex items-center justify-end gap-2 px-3 py-3 border-t border-gray-100">
+              <div className="flex items-center justify-end gap-2 px-3 py-3 border-t border-gray-100 dark:border-gray-800">
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 rounded-lg hover:bg-gray-100 transition-all"
+                  className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
                 >
                   Cancel
                 </button>
@@ -179,8 +179,8 @@ export default function DateRangePicker({ from, to, onChange }) {
 function DateChip({ value, placeholder }) {
   return (
     <div
-      className={`px-2.5 py-1.5 rounded-lg text-[13px] font-medium tabular-nums bg-gray-50 ${
-        value ? "text-gray-800" : "text-gray-400"
+      className={`px-2.5 py-1.5 rounded-lg text-[13px] font-medium tabular-nums bg-gray-50 dark:bg-gray-800 ${
+        value ? "text-gray-800 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"
       }`}
     >
       {value ? labelFor(value) : placeholder}

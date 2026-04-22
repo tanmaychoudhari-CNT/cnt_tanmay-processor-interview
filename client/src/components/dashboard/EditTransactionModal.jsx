@@ -66,20 +66,20 @@ export default function EditTransactionModal({ open, entry, onClose, onSubmit })
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg bg-white rounded-3xl shadow-premium overflow-hidden"
+            className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-3xl shadow-premium overflow-hidden"
           >
-            <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100">
+            <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 tracking-tight">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 tracking-tight">
                   Edit transaction
                 </h3>
-                <p className="text-xs text-gray-500 font-normal mt-1 font-mono">
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-normal mt-1 font-mono">
                   {entry.cardNumber}
                 </p>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-50 transition-all"
+                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
                 aria-label="close"
               >
                 <X className="w-4 h-4" />
@@ -88,11 +88,11 @@ export default function EditTransactionModal({ open, entry, onClose, onSubmit })
 
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div>
-                <label className="text-[11px] font-medium uppercase tracking-wider text-gray-500 ml-1 mb-2 block">
+                <label className="text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1 mb-2 block">
                   Amount
                 </label>
-                <div className="relative bg-gray-50 rounded-xl border border-transparent focus-within:border-accent transition-all">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-normal">
+                <div className="relative bg-gray-50 dark:bg-gray-800 rounded-xl border border-transparent focus-within:border-accent transition-all">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm font-normal">
                     $
                   </span>
                   <input
@@ -100,14 +100,14 @@ export default function EditTransactionModal({ open, entry, onClose, onSubmit })
                     step="0.01"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full bg-transparent border-none outline-none text-sm font-medium text-gray-800 pl-8 pr-4 py-3 tabular-nums"
+                    className="w-full bg-transparent border-none outline-none text-sm font-medium text-gray-800 dark:text-gray-100 pl-8 pr-4 py-3 tabular-nums"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-medium uppercase tracking-wider text-gray-500 ml-1 mb-2 block">
+                <label className="text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1 mb-2 block">
                   Status
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -120,7 +120,7 @@ export default function EditTransactionModal({ open, entry, onClose, onSubmit })
                         "py-2.5 rounded-xl border text-[12px] font-medium transition-all",
                         status === s.value
                           ? s.cls
-                          : "bg-white border-gray-100 text-gray-500 hover:bg-gray-50"
+                          : "bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                       )}
                     >
                       {s.label}
@@ -130,7 +130,7 @@ export default function EditTransactionModal({ open, entry, onClose, onSubmit })
               </div>
 
               <div>
-                <label className="text-[11px] font-medium uppercase tracking-wider text-gray-500 ml-1 mb-2 block">
+                <label className="text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 ml-1 mb-2 block">
                   Remarks
                 </label>
                 <textarea
@@ -139,29 +139,29 @@ export default function EditTransactionModal({ open, entry, onClose, onSubmit })
                   rows={3}
                   maxLength={4000}
                   placeholder="Optional notes…"
-                  className="w-full bg-gray-50 rounded-xl border border-transparent focus:border-accent focus:outline-none text-sm font-normal text-gray-800 placeholder:text-gray-400 px-4 py-3 transition-all resize-none"
+                  className="w-full bg-gray-50 dark:bg-gray-800 rounded-xl border border-transparent focus:border-accent focus:outline-none text-sm font-normal text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 px-4 py-3 transition-all resize-none"
                 />
               </div>
 
               {err && (
-                <div className="flex items-start gap-2 text-red-600 text-xs font-medium bg-red-50 p-3 rounded-xl border border-red-100">
+                <div className="flex items-start gap-2 text-red-600 dark:text-red-400 text-xs font-medium bg-red-50 dark:bg-red-950/40 p-3 rounded-xl border border-red-100 dark:border-red-900">
                   {err}
                 </div>
               )}
             </form>
 
-            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-end gap-2">
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 flex items-center justify-end gap-2">
               <button
                 onClick={onClose}
                 disabled={saving}
-                className="px-4 py-2.5 text-sm font-medium text-gray-700 rounded-xl hover:bg-gray-100 transition-all"
+                className="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-black rounded-xl hover:bg-gray-900 transition-all disabled:opacity-50 shadow-lg shadow-black/10"
+                className="px-5 py-2.5 text-sm font-medium text-white bg-black dark:bg-accent rounded-xl hover:bg-gray-900 dark:hover:bg-accent-dark transition-all disabled:opacity-50 shadow-lg shadow-black/10"
               >
                 {saving ? "Saving…" : "Save changes"}
               </button>

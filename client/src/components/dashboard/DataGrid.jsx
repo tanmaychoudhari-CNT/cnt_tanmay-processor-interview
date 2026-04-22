@@ -142,14 +142,14 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm flex flex-col min-h-[600px]">
-      <div className="p-6 border-b border-gray-50">
+    <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm flex flex-col min-h-[600px] transition-colors">
+      <div className="p-6 border-b border-gray-50 dark:border-gray-800">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-5">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight text-gray-900">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-50">
               Financial records
             </h2>
-            <p className="text-xs text-gray-500 font-normal mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-normal mt-1">
               {loading
                 ? "Loading…"
                 : `${total} ${total === 1 ? "record" : "records"} match your filters`}
@@ -168,7 +168,7 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
       <div className="flex-1 overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-gray-50/50 text-[11px] font-medium uppercase tracking-wider text-gray-500 border-b border-gray-50">
+            <tr className="bg-gray-50/50 dark:bg-gray-800/50 text-[11px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-50 dark:border-gray-800">
               <th className="px-6 py-4">Card number</th>
               <th className="px-6 py-4">Type</th>
               <th
@@ -188,7 +188,7 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
             <AnimatePresence mode="popLayout">
               {items.map((entry) => (
                 <motion.tr
@@ -197,17 +197,17 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="group hover:bg-gray-50/30 transition-all duration-200"
+                  className="group hover:bg-gray-50/30 dark:hover:bg-gray-800/40 transition-all duration-200"
                 >
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
                       <CardBrandLogo type={entry.cardType} />
                       <div className="min-w-0">
-                        <span className="font-mono text-sm font-normal tracking-tight text-gray-800">
+                        <span className="font-mono text-sm font-normal tracking-tight text-gray-800 dark:text-gray-100">
                           {maskCardNumber(entry.cardNumber)}
                         </span>
                         {entry.remarks && (
-                          <p className="text-[11px] text-gray-400 font-normal mt-0.5 truncate max-w-[220px]">
+                          <p className="text-[11px] text-gray-400 dark:text-gray-500 font-normal mt-0.5 truncate max-w-[220px]">
                             {entry.remarks}
                           </p>
                         )}
@@ -215,14 +215,14 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
                     </div>
                   </td>
                   <td className="px-6 py-5">
-                    <span className="inline-flex items-center rounded-full border border-gray-100 bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+                    <span className="inline-flex items-center rounded-full border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:text-gray-300">
                       {entry.cardType || "—"}
                     </span>
                   </td>
                   <td className="px-6 py-5">
                     <span
                       className={`font-medium text-sm tracking-tight tabular-nums ${
-                        entry.amount < 0 ? "text-rose-600" : "text-gray-900"
+                        entry.amount < 0 ? "text-rose-500" : "text-gray-900 dark:text-gray-50"
                       }`}
                     >
                       {formatCurrency(entry.amount)}
@@ -235,7 +235,7 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
                     <StatusBadge status={entry.status} />
                   </td>
                   <td className="px-6 py-5">
-                    <span className="text-xs text-gray-500 font-normal">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">
                       {entry.timestamp
                         ? new Date(entry.timestamp).toLocaleDateString()
                         : "—"}
@@ -245,14 +245,14 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                       <button
                         onClick={() => onEdit(entry)}
-                        className="p-2 text-gray-400 hover:text-accent rounded-lg hover:bg-accent/5 transition-all"
+                        className="p-2 text-gray-400 dark:text-gray-500 hover:text-accent rounded-lg hover:bg-accent/5 dark:hover:bg-accent/10 transition-all"
                         aria-label="edit"
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onDelete(entry.id)}
-                        className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-all"
+                        className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition-all"
                         aria-label="delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -265,7 +265,7 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
             {!loading && items.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-8 py-20 text-center">
-                  <div className="flex flex-col items-center gap-3 text-gray-400">
+                  <div className="flex flex-col items-center gap-3 text-gray-400 dark:text-gray-500">
                     <Search className="w-10 h-10 opacity-20" />
                     <p className="text-sm font-normal">
                       No records match your filters
@@ -286,18 +286,18 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
         </table>
       </div>
 
-      <div className="p-6 border-t border-gray-50 flex items-center justify-between">
-        <p className="text-xs text-gray-500 font-normal">
+      <div className="p-6 border-t border-gray-50 dark:border-gray-800 flex items-center justify-between">
+        <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">
           Page{" "}
-          <span className="font-medium text-gray-700">{page}</span> of{" "}
-          <span className="font-medium text-gray-700">{totalPages}</span>
+          <span className="font-medium text-gray-700 dark:text-gray-200">{page}</span> of{" "}
+          <span className="font-medium text-gray-700 dark:text-gray-200">{totalPages}</span>
         </p>
 
         <div className="flex items-center gap-2">
           <button
             disabled={page <= 1 || loading}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="p-2 bg-gray-50 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-2 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="previous page"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -305,7 +305,7 @@ export default function DataGrid({ onDelete, onEdit, refreshKey }) {
           <button
             disabled={page >= totalPages || loading}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="p-2 bg-gray-50 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-2 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="next page"
           >
             <ChevronRight className="w-5 h-5" />
@@ -330,13 +330,18 @@ function SortHeader({ label, active, dir }) {
 }
 
 const STATUS_STYLES = {
-  success: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  failed: "bg-rose-50 text-rose-700 border-rose-100",
-  pending: "bg-amber-50 text-amber-700 border-amber-100",
+  success:
+    "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900",
+  failed:
+    "bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900",
+  pending:
+    "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900",
 };
 
 function StatusBadge({ status }) {
-  const cls = STATUS_STYLES[status] || "bg-gray-50 text-gray-600 border-gray-100";
+  const cls =
+    STATUS_STYLES[status] ||
+    "bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700";
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${cls}`}
@@ -364,8 +369,8 @@ function SourceBadge({ source, fileName }) {
       <span
         className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${
           isUpload
-            ? "bg-sky-50 text-sky-700 border-sky-100"
-            : "bg-violet-50 text-violet-700 border-violet-100"
+            ? "bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-900"
+            : "bg-violet-50 text-violet-700 border-violet-100 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-900"
         }`}
       >
         {isUpload ? (
@@ -376,7 +381,7 @@ function SourceBadge({ source, fileName }) {
         {isUpload ? "Upload" : "Batch"}
       </span>
       {fileName && (
-        <span className="text-[11px] text-gray-400 font-normal truncate max-w-[140px]">
+        <span className="text-[11px] text-gray-400 dark:text-gray-500 font-normal truncate max-w-[140px]">
           {fileName}
         </span>
       )}

@@ -123,15 +123,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
+    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0A0E1A] transition-colors">
       <Navbar username={user?.username ?? "admin"} />
 
       <main className="p-8 max-w-[1600px] mx-auto">
         <header className="mb-10">
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
             Dashboard overview
           </h1>
-          <p className="text-gray-500 font-normal mt-1.5 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 font-normal mt-1.5 text-sm">
             Manage financial interactions and growth metrics
           </p>
         </header>
@@ -140,10 +140,10 @@ export default function Dashboard() {
 
         <div className="mt-10">
           <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-base font-semibold tracking-tight text-gray-900">
+            <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-gray-50">
               Data injection
             </h3>
-            <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
               Control panel
             </span>
           </div>

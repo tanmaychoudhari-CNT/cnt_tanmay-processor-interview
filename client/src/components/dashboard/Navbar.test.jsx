@@ -7,6 +7,12 @@ vi.mock("../../context/AuthContext", () => ({
   useAuth: () => ({ signOut }),
 }));
 
+// ThemeToggle reads from ThemeContext; stub it so we don't need to wrap in
+// a provider here.
+vi.mock("../../context/ThemeContext", () => ({
+  useTheme: () => ({ theme: "light", isDark: false, toggle: vi.fn() }),
+}));
+
 import Navbar from "./Navbar";
 
 describe("Navbar", () => {

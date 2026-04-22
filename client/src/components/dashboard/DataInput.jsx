@@ -148,15 +148,15 @@ export default function DataInput({ onDataChanged }) {
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden h-full flex flex-col">
-      <div className="flex border-b border-gray-50">
+    <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden h-full flex flex-col transition-colors">
+      <div className="flex border-b border-gray-50 dark:border-gray-800">
         <button
           onClick={() => setActiveTab("upload")}
           className={cn(
             "flex-1 py-4 text-[11px] font-medium uppercase tracking-wider transition-all",
             activeTab === "upload"
-              ? "bg-black text-white"
-              : "bg-white text-gray-400 hover:text-black"
+              ? "bg-black dark:bg-gray-50 text-white dark:text-gray-900"
+              : "bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-gray-100"
           )}
         >
           File Import
@@ -177,7 +177,7 @@ export default function DataInput({ onDataChanged }) {
       <div className="p-6 flex-1 flex flex-col">
         {activeTab === "upload" ? (
           <div
-            className="flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-100 rounded-2xl group hover:border-accent hover:bg-accent/5 transition-all cursor-pointer min-h-[320px]"
+            className="flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-2xl group hover:border-accent hover:bg-accent/5 dark:hover:bg-accent/10 transition-all cursor-pointer min-h-[320px]"
             onClick={() => fileInputRef.current?.click()}
           >
             <input
@@ -188,18 +188,18 @@ export default function DataInput({ onDataChanged }) {
               className="hidden"
             />
 
-            <div className="w-16 h-16 bg-gray-50 flex items-center justify-center rounded-2xl mb-4 group-hover:scale-110 transition-all duration-300">
-              <Upload className="w-8 h-8 text-gray-400 group-hover:text-accent" />
+            <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 flex items-center justify-center rounded-2xl mb-4 group-hover:scale-110 transition-all duration-300">
+              <Upload className="w-8 h-8 text-gray-400 dark:text-gray-500 group-hover:text-accent" />
             </div>
 
-            <p className="text-sm font-medium text-gray-800">
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-100">
               Choose file to upload
             </p>
-            <p className="text-xs text-gray-500 mt-1 font-normal">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-normal">
               Supports CSV, JSON, and XML formats
             </p>
 
-            <div className="mt-8 flex gap-3 text-gray-300">
+            <div className="mt-8 flex gap-3 text-gray-300 dark:text-gray-600">
               <FileType className="w-5 h-5" />
               <FileCode className="w-5 h-5" />
             </div>
@@ -240,7 +240,7 @@ export default function DataInput({ onDataChanged }) {
                       <div className="flex items-center gap-3">
                         <div
                           className={cn(
-                            "flex-1 bg-gray-50 rounded-xl px-4 py-3 border transition-all focus-within:border-accent",
+                            "flex-1 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 border transition-all focus-within:border-accent",
                             cardError ? "border-red-300" : "border-transparent"
                           )}
                         >
@@ -256,12 +256,12 @@ export default function DataInput({ onDataChanged }) {
                             inputMode="numeric"
                             autoComplete="cc-number"
                             maxLength={19}
-                            className="bg-transparent border-none outline-none text-sm font-mono font-normal w-full text-gray-800 placeholder:text-gray-400 tracking-wide"
+                            className="bg-transparent border-none outline-none text-sm font-mono font-normal w-full text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 tracking-wide"
                           />
                         </div>
                         <div
                           className={cn(
-                            "w-48 bg-gray-50 rounded-xl px-4 py-3 border transition-all focus-within:border-accent",
+                            "w-48 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 border transition-all focus-within:border-accent",
                             tsError ? "border-red-300" : "border-transparent"
                           )}
                         >
@@ -271,16 +271,16 @@ export default function DataInput({ onDataChanged }) {
                             onChange={(ev) =>
                               updateManualRow(index, "timestamp", ev.target.value)
                             }
-                            className="bg-transparent border-none outline-none text-sm font-normal w-full text-gray-800 placeholder:text-gray-400"
+                            className="bg-transparent border-none outline-none text-sm font-normal w-full text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 [color-scheme:light] dark:[color-scheme:dark]"
                           />
                         </div>
                         <div
                           className={cn(
-                            "w-32 bg-gray-50 rounded-xl px-4 py-3 border transition-all focus-within:border-accent relative",
+                            "w-32 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 border transition-all focus-within:border-accent relative",
                             amountError ? "border-red-300" : "border-transparent"
                           )}
                         >
-                          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-normal leading-none">
+                          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm font-normal leading-none">
                             $
                           </span>
                           <input
@@ -292,12 +292,12 @@ export default function DataInput({ onDataChanged }) {
                             onChange={(ev) =>
                               updateManualRow(index, "amount", ev.target.value)
                             }
-                            className="bg-transparent border-none outline-none text-sm font-medium w-full pl-4 tabular-nums text-gray-800 placeholder:text-gray-400 placeholder:font-normal"
+                            className="bg-transparent border-none outline-none text-sm font-medium w-full pl-4 tabular-nums text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal"
                           />
                         </div>
                         <button
                           onClick={() => removeManualRow(index)}
-                          className="p-3 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                          className="p-3 text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl transition-all"
                           aria-label="remove row"
                         >
                           <X className="w-4 h-4" />
@@ -317,13 +317,13 @@ export default function DataInput({ onDataChanged }) {
             <div className="flex gap-3">
               <button
                 onClick={addManualRow}
-                className="flex-[2] py-3.5 bg-gray-100 text-gray-800 rounded-xl font-medium text-[13px] tracking-wide hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+                className="flex-[2] py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-xl font-medium text-[13px] tracking-wide hover:bg-gray-200 dark:hover:bg-gray-700 transition-all flex items-center justify-center gap-2"
               >
                 <Plus className="w-4 h-4" /> Add row
               </button>
               <button
                 onClick={submitManual}
-                className="flex-[3] py-3.5 bg-black text-white rounded-xl font-medium text-[13px] tracking-wide hover:bg-gray-900 transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/10"
+                className="flex-[3] py-3.5 bg-black dark:bg-accent text-white rounded-xl font-medium text-[13px] tracking-wide hover:bg-gray-900 dark:hover:bg-accent-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/10"
               >
                 <Save className="w-4 h-4" /> Add all
               </button>

@@ -102,11 +102,11 @@ export default function ChartsPanel({ entries }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-      <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h3 className="text-base font-semibold tracking-tight text-gray-900">Financial trends</h3>
-            <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wider mt-1">
+            <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-gray-50">Financial trends</h3>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mt-1">
               Movement analysis
             </p>
           </div>
@@ -167,17 +167,17 @@ export default function ChartsPanel({ entries }) {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-base font-semibold tracking-tight text-gray-900">
+            <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-gray-50">
               Distribution
             </h3>
-            <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wider mt-1">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mt-1">
               Amount segmentation
             </p>
           </div>
-          <span className="text-[11px] font-medium text-gray-400 tabular-nums">
+          <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 tabular-nums">
             {distributionMeta.totalCount.toLocaleString("en-US")} total
           </span>
         </div>
@@ -256,23 +256,23 @@ export default function ChartsPanel({ entries }) {
         </div>
 
         {/* Inline summary row — turns the chart into a quick-read insight. */}
-        <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-4">
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 grid grid-cols-2 gap-4">
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
               Largest bucket
             </p>
-            <p className="text-sm font-semibold text-gray-900 mt-0.5 tabular-nums">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mt-0.5 tabular-nums">
               {distributionMeta.biggestBucket}{" "}
-              <span className="text-gray-400 font-normal">
+              <span className="text-gray-400 dark:text-gray-500 font-normal">
                 · {distributionMeta.biggestShare}%
               </span>
             </p>
           </div>
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
               Avg transaction
             </p>
-            <p className="text-sm font-semibold text-gray-900 mt-0.5 tabular-nums">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-50 mt-0.5 tabular-nums">
               {new Intl.NumberFormat("en-US", {
                 style: "currency",
                 currency: "USD",
@@ -283,13 +283,13 @@ export default function ChartsPanel({ entries }) {
       </div>
 
       {/* Brand mix — donut showing share of transactions per card brand. */}
-      <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h3 className="text-base font-semibold tracking-tight text-gray-900">
+            <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-gray-50">
               Brand mix
             </h3>
-            <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wider mt-1">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mt-1">
               Share by card type
             </p>
           </div>
@@ -323,10 +323,10 @@ export default function ChartsPanel({ entries }) {
           </ResponsiveContainer>
           {/* Center label — total transactions in this slice of time. */}
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-semibold text-gray-900 tracking-tight tabular-nums">
+            <span className="text-2xl font-semibold text-gray-900 dark:text-gray-50 tracking-tight tabular-nums">
               {totalBrandCount.toLocaleString("en-US")}
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400 mt-1">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-1">
               Transactions
             </span>
           </div>
@@ -337,14 +337,14 @@ export default function ChartsPanel({ entries }) {
           {brandData.map((b) => (
             <div
               key={b.name}
-              className="flex items-center gap-2 text-[12px] font-normal text-gray-600"
+              className="flex items-center gap-2 text-[12px] font-normal text-gray-600 dark:text-gray-300"
             >
               <span
                 className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: BRAND_COLORS[b.name] ?? "#9CA3AF" }}
               />
-              <span className="text-gray-800">{b.name}</span>
-              <span className="ml-auto tabular-nums text-gray-400">
+              <span className="text-gray-800 dark:text-gray-100">{b.name}</span>
+              <span className="ml-auto tabular-nums text-gray-400 dark:text-gray-500">
                 {b.value.toLocaleString("en-US")}
               </span>
             </div>
