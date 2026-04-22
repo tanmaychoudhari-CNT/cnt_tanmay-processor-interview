@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 
-def _create(client, headers, *, card="4267628872390355", amount="100.00", remarks=None, ts=None):
+def _create(client, headers, *, card="4267628872390354", amount="100.00", remarks=None, ts=None):
     body = {"card_number": card, "amount": amount}
     if remarks is not None:
         body["remarks"] = remarks
@@ -21,7 +21,7 @@ def _create(client, headers, *, card="4267628872390355", amount="100.00", remark
 class TestCreate:
     def test_happy_path(self, client, auth_headers):
         tx = _create(client, auth_headers, amount="123.45", remarks="groceries")
-        assert tx["card_number"] == "4267628872390355"
+        assert tx["card_number"] == "4267628872390354"
         assert tx["card_type"] == "Visa"
         assert tx["amount"] == "123.45"
         assert tx["status"] == "success"
@@ -34,7 +34,7 @@ class TestCreate:
     def test_requires_auth(self, client):
         r = client.post(
             "/api/transactions",
-            json={"card_number": "4267628872390355", "amount": "10"},
+            json={"card_number": "4267628872390354", "amount": "10"},
         )
         assert r.status_code == 401
 
@@ -88,12 +88,12 @@ class TestList:
         assert amounts == ["12.00", "11.00", "10.00"]
 
     def test_search_by_substring(self, client, auth_headers):
-        _create(client, auth_headers, card="4267628872390355")
-        _create(client, auth_headers, card="5553959204036891")
+        _create(client, auth_headers, card="4267628872390354")
+        _create(client, auth_headers, card="5553959204036898")
         r = client.get("/api/transactions?search=4267", headers=auth_headers)
         d = r.json()["data"]
         assert d["total"] == 1
-        assert d["items"][0]["card_number"] == "4267628872390355"
+        assert d["items"][0]["card_number"] == "4267628872390354"
 
 
 # ---------------------------------------------------------------------------
@@ -104,9 +104,9 @@ class TestList:
 class TestFilters:
     def setup_data(self, client, h):
         # 3 rows: Visa, MC, Amex at different dates + amounts
-        _create(client, h, card="4267628872390355", amount="100", ts="2024-06-01T00:00:00")
-        _create(client, h, card="5553959204036891", amount="-50", ts="2024-06-15T00:00:00")
-        _create(client, h, card="3336208249795480", amount="500", ts="2024-12-25T00:00:00")
+        _create(client, h, card="4267628872390354", amount="100", ts="2024-06-01T00:00:00")
+        _create(client, h, card="5553959204036898", amount="-50", ts="2024-06-15T00:00:00")
+        _create(client, h, card="3336208249795483", amount="500", ts="2024-12-25T00:00:00")
 
     def test_card_type_visa(self, client, auth_headers):
         self.setup_data(client, auth_headers)
@@ -158,7 +158,7 @@ class TestFilters:
     def test_exact_card_number(self, client, auth_headers):
         self.setup_data(client, auth_headers)
         r = client.get(
-            "/api/transactions?card_number=5553959204036891", headers=auth_headers
+            "/api/transactions?card_number=5553959204036898", headers=auth_headers
         )
         assert r.json()["data"]["total"] == 1
 
@@ -264,8 +264,8 @@ def test_bulk_create(client, auth_headers):
         headers=auth_headers,
         json={
             "items": [
-                {"card_number": "4267628872390355", "amount": "10"},
-                {"card_number": "5553959204036891", "amount": "20"},
+                {"card_number": "4267628872390354", "amount": "10"},
+                {"card_number": "5553959204036898", "amount": "20"},
                 {"card_number": "9999999999999999", "amount": "30"},  # invalid leader
             ]
         },

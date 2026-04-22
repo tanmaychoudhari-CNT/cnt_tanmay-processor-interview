@@ -27,7 +27,7 @@ import InsightsPanel from "../../../src/components/dashboard/InsightsPanel";
 
 const entry = (over = {}) => ({
   id: `id-${Math.random()}`,
-  cardNumber: "4267628872390355",
+  cardNumber: "4267628872390354",
   cardType: "Visa",
   amount: 100,
   timestamp: Date.UTC(2024, 5, 1),

@@ -56,6 +56,25 @@ export function formatCardNumber(digits) {
   return digits.match(/.{1,4}/g)?.join(" ") ?? "";
 }
 
+// Mod-10 checksum used by real card issuers. Mirrors the backend's
+// _luhn_check so a card that the server would reject as 400 is rejected
+// in the form first, with a clearer message.
+export function luhnValid(digits) {
+  if (!digits) return false;
+  let total = 0;
+  for (let i = 0; i < digits.length; i += 1) {
+    // Walk from the rightmost digit; every second digit gets doubled.
+    let d = digits.charCodeAt(digits.length - 1 - i) - 48;
+    if (d < 0 || d > 9) return false;
+    if (i % 2 === 1) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    total += d;
+  }
+  return total % 10 === 0;
+}
+
 export function validateCard(digits) {
   if (!digits) return "Card number is required";
   const leading = digits[0];
@@ -65,6 +84,7 @@ export function validateCard(digits) {
     return "Amex cards must be exactly 15 digits";
   if (leading !== "3" && digits.length !== 15 && digits.length !== 16)
     return "Visa / MasterCard / Discover cards must be 15 or 16 digits";
+  if (!luhnValid(digits)) return "Card number is invalid (Luhn check failed)";
   return null;
 }
 

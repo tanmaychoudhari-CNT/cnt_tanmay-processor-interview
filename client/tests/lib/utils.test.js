@@ -53,7 +53,7 @@ describe("formatNumber", () => {
 
 describe("maskCard", () => {
   it("masks all but last 4", () => {
-    expect(maskCard("4267628872390355")).toBe("•••• 0355");
+    expect(maskCard("4267628872390354")).toBe("•••• 0354");
   });
 
   it("returns short values unchanged", () => {
@@ -67,11 +67,11 @@ describe("maskCard", () => {
 
 describe("maskCardNumber", () => {
   it("keeps first 2 + last 4, masks the middle", () => {
-    expect(maskCardNumber("4267628872390355")).toBe("42**********0355");
+    expect(maskCardNumber("4267628872390354")).toBe("42**********0354");
   });
 
   it("ignores embedded spaces in the input", () => {
-    expect(maskCardNumber("4267 6288 7239 0355")).toBe("42**********0355");
+    expect(maskCardNumber("4267 6288 7239 0354")).toBe("42**********0354");
   });
 
   it("returns the value untouched when there are 6 or fewer digits", () => {

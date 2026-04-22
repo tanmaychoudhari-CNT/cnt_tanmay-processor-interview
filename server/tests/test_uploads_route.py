@@ -3,20 +3,20 @@ import io
 
 CSV_VALID = (
     b"cardNumber,timestamp,amount\n"
-    b"4267628872390355,2024-01-01T00:00:00,100.00\n"
-    b"5553959204036891,2024-01-02T00:00:00,-50.00\n"
+    b"4267628872390354,2024-01-01T00:00:00,100.00\n"
+    b"5553959204036898,2024-01-02T00:00:00,-50.00\n"
 )
 
 CSV_MIXED = CSV_VALID + b"BADCARD,2024-01-03T00:00:00,10\n"
 
 JSON_VALID = (
-    b'[{"cardNumber":"4267628872390355","amount":100,"timestamp":"2024-01-01T00:00:00"}]'
+    b'[{"cardNumber":"4267628872390354","amount":100,"timestamp":"2024-01-01T00:00:00"}]'
 )
 
 XML_VALID = (
     b"<transactions>"
     b"<transaction>"
-    b"<cardNumber>4267628872390355</cardNumber>"
+    b"<cardNumber>4267628872390354</cardNumber>"
     b"<amount>100</amount>"
     b"<timestamp>2024-01-01T00:00:00</timestamp>"
     b"</transaction>"

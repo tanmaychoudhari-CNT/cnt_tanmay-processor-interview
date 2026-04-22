@@ -7,13 +7,13 @@ class TestClassifyCard:
     @pytest.mark.parametrize(
         "raw, expected_number, expected_type",
         [
-            ("4267628872390355", "4267628872390355", "Visa"),
-            ("5553959204036891", "5553959204036891", "MasterCard"),
-            ("6714744990978278", "6714744990978278", "Discover"),
-            ("3336208249795480", "3336208249795480", "Amex"),
+            ("4267628872390354", "4267628872390354", "Visa"),
+            ("5553959204036898", "5553959204036898", "MasterCard"),
+            ("6714744990978279", "6714744990978279", "Discover"),
+            ("3336208249795483", "3336208249795483", "Amex"),
             # Non-digits get stripped.
-            ("4267-6288-7239-0355", "4267628872390355", "Visa"),
-            ("  5553 9592 0403 6891  ", "5553959204036891", "MasterCard"),
+            ("4267-6288-7239-0354", "4267628872390354", "Visa"),
+            ("  5553 9592 0403 6898  ", "5553959204036898", "MasterCard"),
         ],
     )
     def test_valid_cards(self, raw, expected_number, expected_type):
@@ -45,6 +45,13 @@ class TestClassifyCard:
 
     def test_integer_input_is_accepted(self):
         # Non-str inputs are coerced via str(); digits are extracted.
-        number, card_type = classify_card(4267628872390355)
-        assert number == "4267628872390355"
+        number, card_type = classify_card(4267628872390354)
+        assert number == "4267628872390354"
         assert card_type == "Visa"
+
+    def test_luhn_check_rejects_transposed_digits(self):
+        # Valid Luhn baseline accepted.
+        classify_card("4267628872390354")
+        # Swap the last two digits → Luhn fails.
+        with pytest.raises(CardValidationError, match="Luhn"):
+            classify_card("4267628872390345")

@@ -34,7 +34,7 @@ import {
 const backendRow = {
   id: "e3f44059-2142-4a5e-a593-5b90c46f8635",
   user_id: "416be68b-4c4a-466e-b234-97a1225bdb20",
-  card_number: "4267628872390355",
+  card_number: "4267628872390354",
   card_type: "Visa",
   amount: "500.00",
   transaction_date: "2024-06-01T10:00:00",
@@ -51,7 +51,7 @@ describe("toEntry", () => {
   it("maps snake_case backend row to camelCase Entry", () => {
     const entry = toEntry(backendRow);
     expect(entry.id).toBe("e3f44059-2142-4a5e-a593-5b90c46f8635");
-    expect(entry.cardNumber).toBe("4267628872390355");
+    expect(entry.cardNumber).toBe("4267628872390354");
     expect(entry.cardType).toBe("Visa");
     expect(entry.amount).toBe(500);
     expect(entry.status).toBe("success");
@@ -95,7 +95,7 @@ describe("service methods hit the right endpoint + params", () => {
       })
     );
     expect(out.total).toBe(1);
-    expect(out.items[0].cardNumber).toBe("4267628872390355");
+    expect(out.items[0].cardNumber).toBe("4267628872390354");
   });
 
   it("listTransactions passes arbitrary filters straight to the API", async () => {
@@ -121,7 +121,7 @@ describe("service methods hit the right endpoint + params", () => {
   it("createTransaction posts snake_case body", async () => {
     api.post.mockResolvedValueOnce({ data: { data: backendRow } });
     const out = await createTransaction({
-      cardNumber: "4267628872390355",
+      cardNumber: "4267628872390354",
       amount: 500,
       remarks: "note",
       timestamp: Date.UTC(2024, 5, 1, 10, 0, 0),
@@ -129,7 +129,7 @@ describe("service methods hit the right endpoint + params", () => {
     expect(api.post).toHaveBeenCalledWith(
       "/transactions",
       expect.objectContaining({
-        card_number: "4267628872390355",
+        card_number: "4267628872390354",
         amount: 500,
         remarks: "note",
         transaction_date: expect.any(String),
@@ -147,12 +147,12 @@ describe("service methods hit the right endpoint + params", () => {
   it("updateTransaction maps cardNumber, status and remarks to snake_case", async () => {
     api.put.mockResolvedValueOnce({ data: { data: backendRow } });
     await updateTransaction("abc", {
-      cardNumber: "5553959204036891",
+      cardNumber: "5553959204036898",
       status: "failed",
       remarks: "chargeback",
     });
     expect(api.put).toHaveBeenCalledWith("/transactions/abc", {
-      card_number: "5553959204036891",
+      card_number: "5553959204036898",
       status: "failed",
       remarks: "chargeback",
     });
@@ -167,11 +167,11 @@ describe("service methods hit the right endpoint + params", () => {
   it("createTransaction defaults remarks to null and timestamp to null when omitted", async () => {
     api.post.mockResolvedValueOnce({ data: { data: backendRow } });
     await createTransaction({
-      cardNumber: "4267628872390355",
+      cardNumber: "4267628872390354",
       amount: 50,
     });
     expect(api.post).toHaveBeenCalledWith("/transactions", {
-      card_number: "4267628872390355",
+      card_number: "4267628872390354",
       amount: 50,
       remarks: null,
       transaction_date: null,
@@ -203,19 +203,19 @@ describe("service methods hit the right endpoint + params", () => {
       data: { data: { accepted: 2, rejected: 0, rejected_samples: [] } },
     });
     await bulkCreateTransactions([
-      { cardNumber: "4267628872390355", amount: 10 },
-      { cardNumber: "5553959204036891", amount: 20, remarks: "r" },
+      { cardNumber: "4267628872390354", amount: 10 },
+      { cardNumber: "5553959204036898", amount: 20, remarks: "r" },
     ]);
     expect(api.post).toHaveBeenCalledWith("/transactions/bulk", {
       items: [
         {
-          card_number: "4267628872390355",
+          card_number: "4267628872390354",
           amount: 10,
           remarks: null,
           transaction_date: null,
         },
         {
-          card_number: "5553959204036891",
+          card_number: "5553959204036898",
           amount: 20,
           remarks: "r",
           transaction_date: null,
@@ -230,7 +230,7 @@ describe("service methods hit the right endpoint + params", () => {
     });
     const when = Date.UTC(2024, 5, 1, 10, 0, 0);
     await bulkCreateTransactions([
-      { cardNumber: "4267628872390355", amount: 10, timestamp: when },
+      { cardNumber: "4267628872390354", amount: 10, timestamp: when },
     ]);
     const body = api.post.mock.calls[0][1];
     expect(body.items[0].transaction_date).toBe(new Date(when).toISOString());

@@ -28,7 +28,7 @@ import EditTransactionModal from "../../../src/components/dashboard/EditTransact
 
 const entry = {
   id: "tx-1",
-  cardNumber: "4267628872390355",
+  cardNumber: "4267628872390354",
   amount: 100,
   status: "success",
   remarks: "first",

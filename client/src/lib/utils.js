@@ -33,7 +33,7 @@ export function maskCard(card, keep = 4) {
 }
 
 // Show only the first 2 and last 4 digits, everything else masked with "*".
-// e.g. "4267628872390355" -> "42**********0355".
+// e.g. "4267628872390354" -> "42**********0354".
 // Cards with ≤ 6 digits are returned as-is — there's nothing meaningful
 // left to mask once you strip head/tail.
 export function maskCardNumber(card) {

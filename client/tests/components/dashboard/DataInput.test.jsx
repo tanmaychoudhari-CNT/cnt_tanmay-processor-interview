@@ -50,7 +50,7 @@ import DataInput, {
 
 describe("DataInput helpers", () => {
   it("formatCardNumber: 16 digits → 4-4-4-4", () => {
-    expect(formatCardNumber("4267628872390355")).toBe("4267 6288 7239 0355");
+    expect(formatCardNumber("4267628872390354")).toBe("4267 6288 7239 0354");
   });
 
   it("formatCardNumber: 15 digits → 4-6-5 (Amex grouping)", () => {
@@ -81,9 +81,15 @@ describe("DataInput helpers", () => {
       expect(validateCard("371449635398431")).toBeNull();
     });
     it("accepts 15 or 16 digits for Visa/MC/Discover", () => {
-      expect(validateCard("4267628872390355")).toBeNull();
-      expect(validateCard("426762887239035")).toBeNull();
+      // Both PANs are length-valid AND Luhn-valid.
+      expect(validateCard("4267628872390354")).toBeNull();
+      expect(validateCard("426762887239037")).toBeNull();
       expect(validateCard("42676288723903")).toMatch(/15 or 16/);
+    });
+    it("rejects a length-valid card that fails the Luhn checksum", () => {
+      // 16 digits, Visa leader, but the original PAN this codebase used
+      // happens to fail Luhn — verify the new check catches it.
+      expect(validateCard("4267628872390355")).toMatch(/Luhn/);
     });
   });
 
@@ -157,7 +163,7 @@ describe("DataInput — Manual Entry", () => {
     await switchToManual(user);
 
     fireEvent.change(screen.getByPlaceholderText(/1234 5678/), {
-      target: { value: "4267628872390355" },
+      target: { value: "4267628872390354" },
     });
     fireEvent.change(screen.getByPlaceholderText("0.00"), {
       target: { value: "99.95" },
@@ -169,7 +175,7 @@ describe("DataInput — Manual Entry", () => {
       expect(bulkCreateTransactions).toHaveBeenCalledTimes(1)
     );
     const payload = bulkCreateTransactions.mock.calls[0][0];
-    expect(payload[0].cardNumber).toBe("4267628872390355");
+    expect(payload[0].cardNumber).toBe("4267628872390354");
     expect(payload[0].amount).toBe(99.95);
     expect(toast.success).toHaveBeenCalled();
   });
@@ -284,7 +290,7 @@ describe("DataInput — Manual Entry edge cases", () => {
     await user.click(screen.getByText(/manual entry/i));
 
     fireEvent.change(screen.getByPlaceholderText(/1234 5678/), {
-      target: { value: "4267628872390355" },
+      target: { value: "4267628872390354" },
     });
     fireEvent.change(screen.getByPlaceholderText("0.00"), {
       target: { value: "12.34" },
@@ -303,7 +309,7 @@ describe("DataInput — Manual Entry edge cases", () => {
     await user.click(screen.getByText(/manual entry/i));
 
     fireEvent.change(screen.getByPlaceholderText(/1234 5678/), {
-      target: { value: "4267628872390355" },
+      target: { value: "4267628872390354" },
     });
     expect(screen.getByPlaceholderText(/1234 5678/).value).toContain("4267");
 
@@ -334,7 +340,7 @@ describe("DataInput — Manual Entry edge cases", () => {
     await user.click(screen.getByText(/manual entry/i));
 
     fireEvent.change(screen.getByPlaceholderText(/1234 5678/), {
-      target: { value: "4267628872390355" },
+      target: { value: "4267628872390354" },
     });
     fireEvent.change(screen.getByPlaceholderText("0.00"), {
       target: { value: "1" },

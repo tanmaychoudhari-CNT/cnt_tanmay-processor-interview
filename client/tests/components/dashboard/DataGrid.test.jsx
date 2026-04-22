@@ -60,7 +60,7 @@ import DataGrid from "../../../src/components/dashboard/DataGrid";
 
 const row = (overrides = {}) => ({
   id: "tx-1",
-  cardNumber: "4267628872390355",
+  cardNumber: "4267628872390354",
   cardType: "Visa",
   amount: 100,
   timestamp: Date.UTC(2024, 5, 1, 10, 0),
@@ -106,7 +106,7 @@ describe("DataGrid", () => {
 
     await waitFor(() => {
       expect(
-        within(getTableBody()).getByText("42**********0355")
+        within(getTableBody()).getByText("42**********0354")
       ).toBeInTheDocument();
     });
     // Type + amount appear inside the row only.
@@ -167,7 +167,7 @@ describe("DataGrid", () => {
 
     await waitFor(() =>
       expect(
-        within(getTableBody()).getByText("42**********0355")
+        within(getTableBody()).getByText("42**********0354")
       ).toBeInTheDocument()
     );
 
@@ -184,7 +184,7 @@ describe("DataGrid", () => {
 
     await waitFor(() =>
       expect(
-        within(getTableBody()).getByText("42**********0355")
+        within(getTableBody()).getByText("42**********0354")
       ).toBeInTheDocument()
     );
 
@@ -264,7 +264,7 @@ describe("DataGrid", () => {
     render(<DataGrid onDelete={() => {}} onEdit={() => {}} refreshKey={0} />);
     await waitFor(() =>
       expect(
-        within(getTableBody()).getByText("42**********0355")
+        within(getTableBody()).getByText("42**********0354")
       ).toBeInTheDocument()
     );
     expect(within(getTableBody()).getByText("first chargeback")).toBeInTheDocument();

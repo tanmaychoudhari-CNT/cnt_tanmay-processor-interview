@@ -61,7 +61,7 @@ vi.mock("../../src/components/dashboard/DataGrid", () => ({
         onClick={() =>
           onEdit({
             id: "tx-1",
-            cardNumber: "4267628872390355",
+            cardNumber: "4267628872390354",
             amount: 12,
             status: "success",
             remarks: "",
@@ -137,7 +137,7 @@ const summary = {
 const sampleEntries = [
   {
     id: "tx-1",
-    cardNumber: "4267628872390355",
+    cardNumber: "4267628872390354",
     cardType: "Visa",
     amount: 100,
     timestamp: Date.now(),
@@ -152,7 +152,7 @@ function primeApis(overrides = {}) {
   getByCardType.mockResolvedValue([{ card_type: "Visa", count: 1 }]);
   getByDay.mockResolvedValue([{ day: "2024-06-01", total_amount: "100" }]);
   getByCard.mockResolvedValue([
-    { card_number: "4267628872390355", card_type: "Visa", count: 1, total_amount: "100" },
+    { card_number: "4267628872390354", card_type: "Visa", count: 1, total_amount: "100" },
   ]);
   getBySource.mockResolvedValue({ upload: 9999, manual: 1, unknown: 0, total: 10000 });
   for (const [k, v] of Object.entries(overrides)) {
@@ -182,9 +182,9 @@ describe("Dashboard.deriveEntryStats", () => {
 
   it("counts distinct card numbers (duplicates collapse)", () => {
     const s = deriveEntryStats([
-      { cardNumber: "4267628872390355", cardType: "Visa" },
-      { cardNumber: "4267628872390355", cardType: "Visa" },
-      { cardNumber: "5553959204036891", cardType: "MasterCard" },
+      { cardNumber: "4267628872390354", cardType: "Visa" },
+      { cardNumber: "4267628872390354", cardType: "Visa" },
+      { cardNumber: "5553959204036898", cardType: "MasterCard" },
     ]);
     expect(s.uniqueCards).toBe(2);
   });
