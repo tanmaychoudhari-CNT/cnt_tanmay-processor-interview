@@ -1,3 +1,13 @@
+// Data injection panel — the tabbed card at the top of the dashboard that
+// lets operators ingest transactions via either file upload or manual
+// row-by-row entry.
+//
+// Validation lives in this file (formatCardNumber, validateCard,
+// validateAmount, validateTimestamp) because both paths share it and
+// because it's where the UI-specific "format as you type" rules belong.
+// The backend re-validates everything — these helpers are UX polish, not
+// the security boundary.
+
 import React, { useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -15,8 +25,8 @@ import {
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useToast } from "../../hooks/useToast";
-import { errorMessage } from "../../services/api";
-import { bulkCreateTransactions, uploadFile } from "../../services/transactions";
+import { errorMessage } from "../../api/api";
+import { bulkCreateTransactions, uploadFile } from "../../api/transactions";
 
 const emptyRow = () => ({ cardNumber: "", amount: "", timestamp: "" });
 
@@ -58,6 +68,7 @@ export function validateCard(digits) {
   return null;
 }
 
+// Returns an error string, or null if the value is a valid positive amount.
 export function validateAmount(value) {
   if (value === "" || value === null || value === undefined)
     return "Amount is required";
@@ -86,6 +97,8 @@ export default function DataInput({ onDataChanged }) {
   const fileInputRef = useRef(null);
 
   // ── File upload handling ─────────────────────────────────────────────
+  // Fires on both the file-picker change and the drop event. Extension
+  // check here is a UX nicety — the backend does real MIME sniffing.
   const startUpload = async (file) => {
     if (!file) return;
     if (!/\.(csv|json|xml)$/i.test(file.name)) {
@@ -154,6 +167,10 @@ export default function DataInput({ onDataChanged }) {
   const nonEmptyCount = rowStatuses.filter((r) => !r.empty).length;
 
   const submitManual = async () => {
+    // Re-run validation on the full set before submit — the submit button
+    // is disabled when any row is invalid, but this is belt-and-braces so
+    // programmatic triggers (Enter key on a focused input, tests, etc.)
+    // can't bypass the check.
     const normalized = manualEntries.map((e) => ({
       cardNumber: String(e.cardNumber).replace(/\D/g, ""),
       amount: e.amount,

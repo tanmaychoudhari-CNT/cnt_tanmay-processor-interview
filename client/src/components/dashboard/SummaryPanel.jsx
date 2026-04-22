@@ -1,3 +1,7 @@
+// Top-of-page KPI row — four headline metrics. Numbers come straight from
+// the /reports/summary response so they reflect the entire dataset, not
+// just the in-memory entries window.
+
 import React from "react";
 import { motion } from "motion/react";
 import { Users, DollarSign, TrendingUp, ArrowUpRight } from "lucide-react";

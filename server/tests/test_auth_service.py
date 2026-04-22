@@ -5,6 +5,7 @@ import pytest
 from app.config import settings
 from app.services import auth_service
 from app.services.auth_service import (
+    WeakPasswordError,
     create_access_token,
     decode_token,
     hash_password,
@@ -12,18 +13,23 @@ from app.services.auth_service import (
 )
 
 
+# All real passwords used here are 8+ chars to satisfy the minimum-strength
+# check that hash_password enforces in production.
+STRONG_PW = "hunter22"
+
+
 class TestPasswordHashing:
     def test_hash_then_verify(self):
-        h = hash_password("hunter2")
-        assert h != "hunter2"
-        assert verify_password("hunter2", h) is True
+        h = hash_password(STRONG_PW)
+        assert h != STRONG_PW
+        assert verify_password(STRONG_PW, h) is True
 
     def test_wrong_password_fails(self):
-        h = hash_password("hunter2")
-        assert verify_password("nope", h) is False
+        h = hash_password(STRONG_PW)
+        assert verify_password("nopesorry", h) is False
 
     def test_hashes_are_salted(self):
-        assert hash_password("same") != hash_password("same")
+        assert hash_password("same_pwd8") != hash_password("same_pwd8")
 
     def test_long_password_is_truncated_safely(self):
         # bcrypt caps at 72 bytes — the helper must silently handle that.
@@ -35,6 +41,13 @@ class TestPasswordHashing:
 
     def test_verify_returns_false_for_garbage_hash(self):
         assert verify_password("anything", "not-a-bcrypt-hash") is False
+
+    def test_hash_rejects_weak_password(self):
+        # Too short — must never land on disk.
+        with pytest.raises(WeakPasswordError):
+            hash_password("short")
+        with pytest.raises(WeakPasswordError):
+            hash_password("")
 
 
 class TestJWT:

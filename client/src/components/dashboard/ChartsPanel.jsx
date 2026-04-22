@@ -1,3 +1,10 @@
+// Three charts in a row: trend (area), distribution (bar), brand mix (donut).
+//
+// Prefers server aggregates (`byDay`, `byCardType`) over re-aggregating the
+// entries list — entries is capped at 10k rows so distribution-over-time
+// charts would be wrong on a larger dataset. We fall back to client-side
+// derivation only while reports are in flight.
+
 import React, { useMemo } from "react";
 import {
   AreaChart,

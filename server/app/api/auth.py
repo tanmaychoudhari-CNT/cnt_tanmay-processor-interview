@@ -1,18 +1,32 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+"""Authentication routes.
+
+Three endpoints:
+  POST /auth/login  — username+password → bearer token
+  GET  /auth/me     — echo the authenticated user (used by the client to
+                      hydrate state after a page reload)
+  POST /auth/logout — no-op on the server; the client just drops the token
+"""
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas import LoginRequest, StandardResponse, TokenResponse, UserOut
 from app.services import authenticate_user, create_access_token
 
-from ._deps import current_user
+from ._deps import current_user, limiter
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/login", response_model=StandardResponse[TokenResponse])
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
+# Brute-force hardening: cap login attempts per client IP. 10/min is generous
+# for real users fat-fingering a password, but useless to an attacker.
+@limiter.limit("10/minute")
+def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
+    # `request` is required by slowapi — it reads the client IP off of it.
+    # A single generic 401 for both "unknown user" and "wrong password" so
+    # attackers can't enumerate valid usernames by comparing error shapes.
     user = authenticate_user(db, payload.username, payload.password)
     if not user:
         raise HTTPException(
@@ -31,6 +45,8 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=StandardResponse[UserOut])
 def me(user=Depends(current_user)):
+    # Used by the SPA's AuthContext on boot to re-hydrate user state from
+    # the bearer token that's still sitting in localStorage.
     return StandardResponse(data=UserOut.model_validate(user))
 
 

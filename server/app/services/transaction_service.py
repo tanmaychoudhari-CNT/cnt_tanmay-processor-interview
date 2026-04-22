@@ -1,3 +1,10 @@
+"""Business logic for the /transactions + /reports endpoints.
+
+Every function takes an explicit `db: Session` and is scoped by `user_id`
+where the operation is user-facing. The API layer never builds its own
+queries — it always goes through here so the scoping rule can't be
+accidentally bypassed from a new route.
+"""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -14,6 +21,9 @@ from app.schemas.transaction import ManualEntry, TransactionCreate, TransactionU
 from app.services.card_classifier import CardValidationError, classify_card
 
 
+# Allow-list of columns the client can sort by. Anything not in here falls
+# back to `transaction_date` — this prevents arbitrary-column sort injection
+# via the ?sort_by= query string.
 SORTABLE_FIELDS = {
     "amount": Transaction.amount,
     "transaction_date": Transaction.transaction_date,
@@ -65,6 +75,12 @@ def create_transaction(
     source: str = "manual_entry",
     file_name: Optional[str] = None,
 ) -> Transaction:
+    """Insert a single transaction. Raises CardValidationError on bad card.
+
+    `status` is hard-coded to "success" because the app doesn't model the
+    lifecycle of a real card-processor — every create is a completed record.
+    Status is mutable later via `update_transaction`.
+    """
     _validate_source(source)
     normalized, _ = classify_card(payload.card_number)
     txn = Transaction(
@@ -91,6 +107,12 @@ def create_transactions_bulk(
     source: str = "manual_entry",
     file_name: Optional[str] = None,
 ) -> tuple[int, int, list[str]]:
+    """Insert many rows in one commit. Returns (accepted, rejected, samples).
+
+    Invalid rows are skipped (not fatal) so a single bad card number doesn't
+    reject the whole batch. At most 5 rejection reasons are surfaced back —
+    enough for the UI to show a useful message without flooding the response.
+    """
     _validate_source(source)
     accepted = 0
     rejected = 0
@@ -133,6 +155,12 @@ def create_transactions_bulk(
 
 
 def _scope_filter(user_id: Optional[UUID], include_deleted: bool = False):
+    """Compose the common "visible to this user" WHERE clause.
+
+    `is_deleted` check is written as `(False) OR (NULL)` because legacy rows
+    inserted before the soft-delete column existed have NULL in that slot —
+    they should still be visible as active.
+    """
     clauses = []
     if not include_deleted:
         clauses.append(
@@ -184,17 +212,21 @@ def list_transactions(
         filters.append(Transaction.user_id == user_id)
 
     if search:
+        # Strip to digits so "**** 0355" in the UI still matches "…0355" in
+        # the DB. Empty-after-strip means no filter (avoid "%%" no-op).
         digits = "".join(ch for ch in search if ch.isdigit())
         if digits:
             filters.append(Transaction.card_number.like(f"%{digits}%"))
 
     if card_number:
+        # Exact match (distinct from `search`, which is a substring match).
         digits = "".join(ch for ch in card_number if ch.isdigit())
         if digits:
             filters.append(Transaction.card_number == digits)
 
     if card_type:
-        # Reverse-lookup: map "Visa" → leading digit "4" etc.
+        # Reverse-lookup: map "Visa" → leading digit "4" etc. Uses LIKE
+        # rather than a stored column because card_type isn't persisted.
         leader = next((k for k, v in CARD_TYPES.items() if v == card_type), None)
         if leader:
             filters.append(Transaction.card_number.like(f"{leader}%"))
@@ -299,17 +331,24 @@ def restore_transaction(
 
 
 def summary(db: Session, *, user_id: Optional[UUID] = None) -> dict:
+    """Headline KPIs — total entries, total/avg/hi/lo amount, deleted count.
+
+    Deliberately returns `deleted_count` as a separate filter (not scoped by
+    `active`) so the UI can render a "restore soft-deleted rows" affordance
+    without having to request include_deleted=True on a second round-trip.
+    """
     active = _scope_filter(user_id, include_deleted=False)
     deleted_filter = and_(Transaction.is_deleted.is_(True), Transaction.user_id == user_id) if user_id else Transaction.is_deleted.is_(True)
 
+    # COALESCE(...,0) so the SQL engine returns 0 instead of NULL when the
+    # table is empty — saves a conditional in Python.
     total_entries_q = select(func.count(Transaction.id))
     total_amount_q = select(func.coalesce(func.sum(Transaction.amount), 0))
     avg_q = select(func.coalesce(func.avg(Transaction.amount), 0))
     hi_q = select(func.coalesce(func.max(Transaction.amount), 0))
     lo_q = select(func.coalesce(func.min(Transaction.amount), 0))
-    for q in (total_entries_q, total_amount_q, avg_q, hi_q, lo_q):
-        pass  # no-op; we re-bind below
     if active is not None:
+        # Apply the user+soft-delete scope to every aggregate.
         total_entries_q = total_entries_q.where(active)
         total_amount_q = total_amount_q.where(active)
         avg_q = avg_q.where(active)

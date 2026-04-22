@@ -1,3 +1,10 @@
+"""Aggregated report endpoints for dashboard charts.
+
+All four endpoints are scoped to the authenticated user and exclude
+soft-deleted rows. They return *aggregations over the full dataset* — the
+dashboard uses them instead of re-aggregating the /transactions page so the
+charts reflect every row even when the grid is capped at 10k.
+"""
 from typing import List
 
 from fastapi import APIRouter, Depends, Query
@@ -22,6 +29,7 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 
 @router.get("/summary", response_model=StandardResponse[SummaryResponse])
 def get_summary(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    # Headline KPIs — total volume, averages, extremes, deleted count.
     return StandardResponse(data=SummaryResponse(**summary(db, user_id=user.id)))
 
 
@@ -31,6 +39,7 @@ def get_by_card(
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
 ):
+    # Top cards by total volume. Powers the "Top cards" insights panel.
     return StandardResponse(
         data=[ByCardItem(**row) for row in by_card(db, limit=limit, user_id=user.id)]
     )
@@ -38,6 +47,7 @@ def get_by_card(
 
 @router.get("/by-card-type", response_model=StandardResponse[List[ByCardTypeItem]])
 def get_by_card_type(db: Session = Depends(get_db), user: User = Depends(current_user)):
+    # Brand mix — powers the donut chart on the dashboard.
     return StandardResponse(
         data=[ByCardTypeItem(**row) for row in by_card_type(db, user_id=user.id)]
     )
@@ -49,6 +59,8 @@ def get_by_day(
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
 ):
+    # Daily volume series — powers the trend/area chart. Default of 365 days
+    # is one year; the UI usually asks for the last 90.
     return StandardResponse(
         data=[ByDayItem(**row) for row in by_day(db, limit=limit, user_id=user.id)]
     )

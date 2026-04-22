@@ -27,11 +27,11 @@ vi.mock("motion/react", () => {
 const toast = { success: vi.fn(), error: vi.fn(), info: vi.fn() };
 vi.mock("../../hooks/useToast", () => ({ useToast: () => toast }));
 
-vi.mock("../../services/api", () => ({
+vi.mock("../../api/api", () => ({
   errorMessage: (e) => e?.message ?? "err",
 }));
 
-vi.mock("../../services/transactions", () => ({
+vi.mock("../../api/transactions", () => ({
   bulkCreateTransactions: vi.fn(),
   uploadFile: vi.fn(),
 }));
@@ -39,7 +39,7 @@ vi.mock("../../services/transactions", () => ({
 import {
   bulkCreateTransactions,
   uploadFile,
-} from "../../services/transactions";
+} from "../../api/transactions";
 import DataInput, {
   formatCardNumber,
   maxDigitsFor,

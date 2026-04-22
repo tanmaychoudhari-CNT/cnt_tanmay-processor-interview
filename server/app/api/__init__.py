@@ -1,3 +1,10 @@
+"""Top-level API router.
+
+Every HTTP route in the app hangs off of `api_router`, which is mounted at
+`/api` in `main.py`. Keeping the prefix centralized here means individual
+route modules stay unaware of the global prefix and can be composed in any
+order.
+"""
 from fastapi import APIRouter
 
 from .auth import router as auth_router

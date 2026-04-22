@@ -1,3 +1,15 @@
+// Dashboard shell — orchestrates every panel on the main page.
+//
+// State shape:
+//   entries  — in-memory list (capped at 10k by listAllTransactions); used
+//              by panels that need row-level detail.
+//   stats    — headline KPIs, server-computed over the full dataset.
+//   reports  — server aggregations (byCardType / byDay / byCard). Feeds the
+//              charts so they reflect every row, not just the 10k window.
+//
+// Two refresh paths: `loadData` (full reload) and `refreshReports` (light
+// poll every 15s for chart-only updates).
+
 import React, { useCallback, useEffect, useState } from "react";
 import Navbar from "../components/dashboard/Navbar";
 import SummaryPanel from "../components/dashboard/SummaryPanel";
@@ -9,7 +21,7 @@ import InsightsPanel from "../components/dashboard/InsightsPanel";
 import EditTransactionModal from "../components/dashboard/EditTransactionModal";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../hooks/useToast";
-import { errorMessage } from "../services/api";
+import { errorMessage } from "../api/api";
 import {
   deleteTransaction,
   getByCard,
@@ -18,7 +30,7 @@ import {
   getSummary,
   listAllTransactions,
   updateTransaction,
-} from "../services/transactions";
+} from "../api/transactions";
 
 // Auto-refresh cadence for live charts. Keeps the dashboard honest without
 // hammering the backend — one set of aggregated reports every 15s.
@@ -36,6 +48,8 @@ const initialStats = {
   todayCount: 0,
 };
 
+// Client-side derivations that aren't worth a dedicated backend endpoint.
+// Exported for the unit test.
 export function deriveEntryStats(items) {
   const cardSet = new Set();
   const byBrand = {};

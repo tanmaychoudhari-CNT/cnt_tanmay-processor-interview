@@ -1,3 +1,10 @@
+// Modal for editing a single transaction — amount, status, remarks.
+//
+// Card number and timestamp are intentionally *not* editable here: card
+// number is the row's identity in reports, and letting users rewrite
+// history on timestamps would break every time-series chart. Need to
+// change those? Delete and re-create.
+
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X } from "lucide-react";

@@ -1,3 +1,6 @@
+"""Re-exports so API routes can `from app.services import foo` without
+knowing which submodule each helper lives in. This is pure plumbing — no
+logic should live here."""
 from .card_classifier import classify_card, CardValidationError
 from .auth_service import (
     hash_password,
@@ -6,6 +9,8 @@ from .auth_service import (
     decode_token,
     authenticate_user,
     ensure_seed_admin,
+    validate_password_strength,
+    WeakPasswordError,
 )
 from .transaction_service import (
     create_transaction,
@@ -31,6 +36,8 @@ __all__ = [
     "decode_token",
     "authenticate_user",
     "ensure_seed_admin",
+    "validate_password_strength",
+    "WeakPasswordError",
     "create_transaction",
     "create_transactions_bulk",
     "update_transaction",

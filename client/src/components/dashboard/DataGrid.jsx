@@ -1,3 +1,10 @@
+// Server-side paginated data grid.
+//
+// Every filter/sort/page change triggers a fresh /transactions call — no
+// client-side filtering at all. The last fetch wins via the `cancelled`
+// flag in the effect; older in-flight requests are dropped on arrival so
+// rapid filter edits can't flash stale rows.
+
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ChevronLeft,
@@ -15,8 +22,8 @@ import CardBrandLogo from "./CardBrandLogo";
 import { formatCurrency, maskCardNumber } from "../../lib/utils";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useToast } from "../../hooks/useToast";
-import { errorMessage } from "../../services/api";
-import { listTransactions } from "../../services/transactions";
+import { errorMessage } from "../../api/api";
+import { listTransactions } from "../../api/transactions";
 
 const PAGE_SIZE = 8;
 

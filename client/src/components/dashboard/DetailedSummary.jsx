@@ -1,3 +1,7 @@
+// Right-rail summary card — denser breakdown of the same stats that the
+// KPI row hints at, plus a few client-side derivations (unique cards, top
+// brand, today's count) that aren't KPI-headline-worthy.
+
 import React from "react";
 import { motion } from "motion/react";
 import {

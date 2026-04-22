@@ -29,7 +29,7 @@ vi.mock("../context/AuthContext", () => ({
   useAuth: () => ({ signIn }),
 }));
 
-vi.mock("../services/api", () => ({
+vi.mock("../api/api", () => ({
   errorMessage: (e) => e?.message ?? "err",
 }));
 

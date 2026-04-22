@@ -1,14 +1,19 @@
 import logging
+import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 
 from app.config import settings
 from app.database import Base, SessionLocal, engine
-from app.routes import api_router
+from app.api import api_router
+from app.api._deps import limiter
 from app.services import ensure_seed_admin
 
 
@@ -35,14 +40,15 @@ PERFORMANCE_INDEXES = [
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    # 0) Refuse to start in production with insecure defaults.
+    settings.assert_production_ready()
+
     # 1) Auto-create the `users` table if it doesn't exist. The `transactions`
     #    table is managed outside this app — create_all() skips it if present.
     Base.metadata.create_all(bind=engine)
 
     # 2) Ensure the performance indexes exist on `transactions` (idempotent).
-    #    Skip on SQLite (used only in tests) — these indexes are meant for
-    #    production Postgres and CREATE INDEX on a transient test DB just
-    #    slows things down.
+    #    Skip on SQLite (used only in tests).
     if engine.dialect.name != "sqlite":
         with engine.begin() as conn:
             for sql in PERFORMANCE_INDEXES:
@@ -63,34 +69,61 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Rate-limiter plumbing.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
+
+# Explicit methods + headers instead of wildcard — removes a foot-gun where a
+# future origin wildcard would leak credential-bearing requests.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    max_age=600,
 )
 
 
 @app.middleware("http")
-async def request_logger(request: Request, call_next):
+async def request_context(request: Request, call_next):
+    """Attach a request id to every call so logs + error responses correlate."""
+    rid = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:12]
+    request.state.request_id = rid
     response = await call_next(request)
-    logger.info("%s %s -> %s", request.method, request.url.path, response.status_code)
+    response.headers["X-Request-ID"] = rid
+    logger.info(
+        "%s %s -> %s [rid=%s]",
+        request.method,
+        request.url.path,
+        response.status_code,
+        rid,
+    )
     return response
 
 
 @app.exception_handler(Exception)
-async def unhandled_exc(_: Request, exc: Exception):
-    logger.exception("unhandled: %s", exc)
+async def unhandled_exc(request: Request, exc: Exception):
+    """Log the full traceback server-side, return an opaque id to the client."""
+    rid = getattr(request.state, "request_id", "unknown")
+    # Traceback stays in our logs only — the client never sees internals.
+    logger.exception("unhandled [rid=%s]: %s", rid, exc)
     return JSONResponse(
         status_code=500,
-        content={"success": False, "message": "internal server error"},
+        content={
+            "success": False,
+            "message": "internal server error",
+            "request_id": rid,
+        },
     )
 
 
 @app.get("/api/health", tags=["health"])
-def health():
+@limiter.limit("30/minute")
+def health(request: Request):
+    # Health endpoint is intentionally minimal — no DB round-trip, no details.
     return {"success": True, "data": {"status": "ok"}}
 
 

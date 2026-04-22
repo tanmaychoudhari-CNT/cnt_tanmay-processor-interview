@@ -50,6 +50,21 @@ def db_session(db_engine):
         session.close()
 
 
+@pytest.fixture(autouse=True)
+def _disable_rate_limiter():
+    """Rate limits must not apply in tests — `auth_token` hits /login many
+    times per second, which would trip the real 10/minute cap in seconds.
+    Toggle the limiter off globally for the duration of every test."""
+    from app.api._deps import limiter
+
+    prev = limiter.enabled
+    limiter.enabled = False
+    try:
+        yield
+    finally:
+        limiter.enabled = prev
+
+
 @pytest.fixture
 def client(db_engine):
     """FastAPI TestClient with get_db overridden to use the test engine.

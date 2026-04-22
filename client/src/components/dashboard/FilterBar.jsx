@@ -1,3 +1,9 @@
+// Filter chips for the data grid: search, card-type, date range, amount.
+//
+// Filters are passed up to the parent via `onChange` on every keystroke;
+// the grid debounces the search field and round-trips the full filter set
+// to the backend on every change.
+
 import React from "react";
 import { Search, X, CreditCard, DollarSign } from "lucide-react";
 import DateRangePicker from "./DateRangePicker";

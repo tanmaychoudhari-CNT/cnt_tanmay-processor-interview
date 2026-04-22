@@ -19,7 +19,28 @@ def _encode(password: str) -> bytes:
     return password.encode("utf-8")[:_BCRYPT_MAX]
 
 
+class WeakPasswordError(ValueError):
+    """Raised when a password fails the minimum-strength check."""
+
+
+def validate_password_strength(password: str) -> None:
+    """Enforce minimum password length. Raise WeakPasswordError if too short.
+
+    Length-only is weak by modern standards, but meaningful as a first gate —
+    rejects empty / trivial passwords. Tighten with entropy/zxcvbn checks
+    when/if self-signup is added.
+    """
+    if not isinstance(password, str) or len(password) < settings.password_min_length:
+        raise WeakPasswordError(
+            f"password must be at least {settings.password_min_length} characters"
+        )
+
+
 def hash_password(password: str) -> str:
+    # Always validate before hashing so we never end up with a weak hash on
+    # disk. Bcrypt also silently truncates >72 bytes, but that's a different
+    # problem handled by _encode above.
+    validate_password_strength(password)
     return bcrypt.hashpw(_encode(password), bcrypt.gensalt()).decode("utf-8")
 
 
@@ -54,13 +75,29 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional[Use
 
 
 def ensure_seed_admin(db: Session) -> None:
-    """Create the default admin user if the users table is empty."""
+    """Create the default admin user if the users table is empty.
+
+    Skips seeding if the admin password is too short — forces operators to
+    configure a real password via SEED_ADMIN_PASSWORD before bootstrap.
+    """
     existing = db.scalar(select(User).limit(1))
     if existing:
         return
+    try:
+        password_hash = hash_password(settings.seed_admin_password)
+    except WeakPasswordError:
+        # Don't fall back to seeding with a weak password — log and skip.
+        # Operator will see no admin user and must set SEED_ADMIN_PASSWORD.
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "refusing to seed admin: SEED_ADMIN_PASSWORD is shorter than %d chars",
+            settings.password_min_length,
+        )
+        return
     admin = User(
         username=settings.seed_admin_username,
-        password_hash=hash_password(settings.seed_admin_password),
+        password_hash=password_hash,
     )
     db.add(admin)
     db.commit()

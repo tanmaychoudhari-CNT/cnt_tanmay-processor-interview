@@ -1,9 +1,15 @@
+"""Transaction CRUD routes.
+
+Every route is scoped to the authenticated user — a transaction belonging
+to user A is invisible to user B, including soft-deleted ones. The scoping
+happens in the service layer via `user_id=user.id` on every call.
+"""
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -27,7 +33,7 @@ from app.services import (
 )
 from app.services.card_classifier import CardValidationError
 
-from ._deps import current_user
+from ._deps import current_user, limiter
 
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -35,6 +41,8 @@ router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 @router.get("", response_model=StandardResponse[TransactionListResponse])
 def list_(
+    # Page-size is capped at 10,000 — larger than any UI paginator would ask
+    # for, but deliberately generous for the dashboard's "load-all" path.
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1, le=10000),
     search: Optional[str] = Query(None, description="Substring match against card_number"),
@@ -98,6 +106,8 @@ def create(
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
 ):
+    # Anything created via this endpoint is flagged `manual_entry`.
+    # File-uploaded rows go through /uploads and get `file_upload`.
     try:
         txn = create_transaction(db, payload, user_id=user.id, source="manual_entry")
     except CardValidationError as err:
@@ -127,6 +137,8 @@ def delete(
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
 ):
+    # Soft delete — row stays in the table with is_deleted=True so an admin
+    # can restore it. Hard delete isn't exposed through the API.
     if not delete_transaction(db, transaction_id, user_id=user.id):
         raise HTTPException(status_code=404, detail="transaction not found")
     return StandardResponse(message="deleted")
@@ -146,7 +158,11 @@ def restore(
 
 
 @router.post("/bulk", response_model=StandardResponse[dict])
+# Bulk inserts are expensive — cap them even tighter than the global limit.
+# 30 bulk submissions / hour is plenty for real use, nothing for abuse.
+@limiter.limit("30/hour")
 def bulk_create(
+    request: Request,
     payload: ManualBulkRequest,
     db: Session = Depends(get_db),
     user: User = Depends(current_user),

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Stub the API layer the context depends on.
-vi.mock("../services/api", () => {
+vi.mock("../api/api", () => {
   const store = { token: null };
   return {
     getToken: () => store.token,
@@ -15,14 +15,14 @@ vi.mock("../services/api", () => {
   };
 });
 
-vi.mock("../services/auth", () => ({
+vi.mock("../api/auth", () => ({
   login: vi.fn(),
   me: vi.fn(),
   logout: vi.fn(),
 }));
 
-import * as authService from "../services/auth";
-import * as apiModule from "../services/api";
+import * as authService from "../api/auth";
+import * as apiModule from "../api/api";
 import { AuthProvider, useAuth } from "./AuthContext";
 
 function Probe() {
@@ -100,7 +100,7 @@ describe("AuthContext", () => {
   });
 
   it("auto-hydrates user from stored token on mount", async () => {
-    const api = await import("../services/api");
+    const api = await import("../api/api");
     api.setToken("T");
     authService.me.mockResolvedValueOnce({ id: 1, username: "admin" });
 

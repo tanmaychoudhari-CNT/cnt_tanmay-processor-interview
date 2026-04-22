@@ -1,3 +1,9 @@
+"""ORM mapping for the `users` table.
+
+The table is auto-created by `Base.metadata.create_all()` on app startup —
+unlike `transactions`, which is managed externally. The seed admin user is
+inserted lazily by `ensure_seed_admin` if the table is empty.
+"""
 import uuid
 from datetime import datetime, timezone
 

@@ -1,3 +1,9 @@
+// Sticky top navbar — logo + theme toggle + user block + sign-out button.
+//
+// Intentionally minimal: no search, no notifications, no settings menu.
+// Every panel has its own header for title/actions, so the navbar is just
+// global chrome (brand + session state).
+
 import React from "react";
 import { LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";

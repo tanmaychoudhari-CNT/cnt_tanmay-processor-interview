@@ -1,3 +1,8 @@
+// Login screen. Two-pane layout: form on the left, marketing / product
+// preview on the right (hidden under the `md` breakpoint on narrow
+// viewports). The PublicOnlyRoute guard sends already-signed-in users
+// straight to the dashboard.
+
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -8,7 +13,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { errorMessage } from "../services/api";
+import { errorMessage } from "../api/api";
 import logoUrl from "../assets/signapay-logo.webp";
 
 export default function Login() {
@@ -24,6 +29,8 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
+      // signIn persists the token + hydrates the user profile. On success
+      // the route guard takes over and redirects to the dashboard.
       await signIn(username, password);
     } catch (err) {
       setError(errorMessage(err) || "Invalid username or password");

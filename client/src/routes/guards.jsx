@@ -1,3 +1,9 @@
+// Route-level auth guards.
+//
+// Both guards depend on AuthContext's `loading` flag — the first render
+// after a page reload has `user === null` *before* the /me round-trip
+// finishes, so guarding on user alone would flash the login screen.
+
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";

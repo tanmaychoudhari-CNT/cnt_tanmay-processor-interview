@@ -46,15 +46,15 @@ vi.mock("../../hooks/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }),
 }));
 
-vi.mock("../../services/transactions", () => ({
+vi.mock("../../api/transactions", () => ({
   listTransactions: vi.fn(),
 }));
 
-vi.mock("../../services/api", () => ({
+vi.mock("../../api/api", () => ({
   errorMessage: (e) => e?.message ?? "err",
 }));
 
-import { listTransactions } from "../../services/transactions";
+import { listTransactions } from "../../api/transactions";
 import DataGrid from "./DataGrid";
 
 const row = (overrides = {}) => ({

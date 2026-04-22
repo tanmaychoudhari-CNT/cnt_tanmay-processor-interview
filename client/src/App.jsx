@@ -5,6 +5,9 @@ import Login from "./pages/Login";
 import { ToastProvider } from "./hooks/useToast";
 import { ProtectedRoute, PublicOnlyRoute } from "./routes/guards";
 
+// Top-level route table. Auth is enforced by the route guards, not at the
+// component level — Login never renders for a signed-in user and Dashboard
+// never renders for a signed-out one. See routes/guards.jsx.
 export default function App() {
   return (
     <ToastProvider>

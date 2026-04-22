@@ -1,3 +1,9 @@
+// Transaction API + DTO mapping.
+//
+// The backend returns snake_case with ISO date strings; the UI uses
+// camelCase with ms-epoch numbers. `toEntry` is the single boundary where
+// that translation happens — every render path expects the UI shape.
+
 import { api, unwrap } from "./api";
 
 // Backend row → UI Entry shape (camelCase + numeric timestamp in ms).
@@ -21,6 +27,10 @@ export function toEntry(tx) {
   };
 }
 
+// "Load everything" — used on dashboard boot to hydrate the in-memory
+// entries list (powers the distribution chart + source-split). Capped at
+// 10k rows by the backend; charts that need every row go through the
+// /reports endpoints instead.
 export const listAllTransactions = async () => {
   const data = await unwrap(
     api.get("/transactions", {
@@ -93,6 +103,10 @@ export const bulkCreateTransactions = (items) =>
     })
   );
 
+// Upload a CSV/JSON/XML file. `onProgress(percent)` fires on every chunk
+// axios reports — wired through to the upload-panel's progress bar. Note
+// `e.total` can be missing on some proxies, in which case we just don't
+// update (progress stays at the last known value rather than bouncing).
 export const uploadFile = (file, onProgress) => {
   const form = new FormData();
   form.append("file", file);

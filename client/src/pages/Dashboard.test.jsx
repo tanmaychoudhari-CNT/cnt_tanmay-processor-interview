@@ -9,8 +9,8 @@ vi.mock("../context/AuthContext", () => ({
 vi.mock("../hooks/useToast", () => ({
   useToast: () => ({ success: () => {}, error: () => {}, info: () => {} }),
 }));
-vi.mock("../services/api", () => ({ errorMessage: (e) => e?.message }));
-vi.mock("../services/transactions", () => ({
+vi.mock("../api/api", () => ({ errorMessage: (e) => e?.message }));
+vi.mock("../api/transactions", () => ({
   deleteTransaction: vi.fn(),
   getSummary: vi.fn(),
   listAllTransactions: vi.fn(),

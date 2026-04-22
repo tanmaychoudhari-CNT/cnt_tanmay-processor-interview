@@ -1,3 +1,11 @@
+// App-wide toast notifications.
+//
+// The provider owns the queue + the fixed-position container that renders
+// them. Call sites use `const toast = useToast(); toast.success("...")`.
+// Kept intentionally small — no queue limit, no positioning API, no
+// actions. If we ever need those, swap in a library rather than growing
+// this.
+
 import { createContext, useCallback, useContext, useState } from "react";
 
 const ToastContext = createContext(null);
@@ -6,8 +14,12 @@ export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
   const push = useCallback((toast) => {
+    // Random 10-ish char id — collision-proof enough for a visible queue
+    // that rarely exceeds a handful of entries at once.
     const id = Math.random().toString(36).slice(2);
     setToasts((prev) => [...prev, { id, ...toast }]);
+    // Auto-dismiss. Default of 3.5s is long enough to read, short enough
+    // not to stack up when multiple async ops resolve together.
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, toast.duration ?? 3500);
